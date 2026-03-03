@@ -1,0 +1,141 @@
+/* ============================================================
+   SETUP PAGE — Relationship Setup Form
+   Extends the MoodSync Liquid Glass design system (style.css)
+   ============================================================ */
+
+.setup-page {
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    align-items: center;
+    padding: 7rem 0 4rem;
+}
+
+.setup {
+    max-width: 520px;
+    margin-inline: auto;
+    width: 100%;
+}
+
+.setup__card {
+    padding: 3rem 2.5rem;
+    position: relative;
+}
+
+.setup__header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+    position: relative;
+    z-index: 2;
+}
+
+.setup__icon {
+    font-size: 2.5rem;
+    display: block;
+    margin-bottom: 1rem;
+}
+
+.setup__title {
+    font-family: var(--ff-sans);
+    font-size: clamp(1.4rem, 3.5vw, 1.8rem);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    margin-bottom: 0.5rem;
+    background: var(--grad-accent-flow);
+    background-size: 300% 300%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: gradientFlow 8s ease infinite;
+}
+
+.setup__subtitle {
+    color: var(--clr-text-secondary);
+    font-size: 0.92rem;
+    font-weight: 400;
+}
+
+.setup__form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    position: relative;
+    z-index: 2;
+}
+
+/* ---------- Glass Form Elements ---------- */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.form-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--clr-text-secondary);
+    letter-spacing: 0.02em;
+    padding-left: 0.2rem;
+}
+
+.form-input {
+    font-family: var(--ff-sans);
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--clr-text);
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: var(--radius-sm);
+    padding: 0.85rem 1rem;
+    outline: none;
+    width: 100%;
+    transition: all var(--duration-fast) var(--ease-smooth);
+    position: relative;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05),
+                inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.form-input::placeholder {
+    color: var(--clr-text-tertiary);
+    font-weight: 400;
+}
+
+.form-input:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.form-input:focus {
+    border-color: rgba(201, 140, 245, 0.5);
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05),
+                0 0 0 3px rgba(201, 140, 245, 0.12),
+                inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* Date input color-scheme for dark UI */
+.form-input[type="date"] {
+    color-scheme: dark;
+}
+
+.setup__submit {
+    width: 100%;
+    justify-content: center;
+    margin-top: 0.5rem;
+}
+
+.setup__privacy {
+    text-align: center;
+    font-size: 0.78rem;
+    color: var(--clr-text-tertiary);
+    font-weight: 400;
+    letter-spacing: 0.01em;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 640px) {
+    .setup-page { padding: 6rem 0 3rem; }
+    .setup__card { padding: 2rem 1.4rem; }
+}

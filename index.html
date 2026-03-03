@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MoodSync — Understand Your Relationship Better</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Animated Background Orbs -->
+    <div class="bg-orbs" aria-hidden="true">
+        <div class="orb orb--1"></div>
+        <div class="orb orb--2"></div>
+        <div class="orb orb--3"></div>
+        <div class="orb orb--4"></div>
+    </div>
+
+    <!-- ========== NAVBAR ========== -->
+    <nav class="navbar">
+        <div class="container navbar__inner">
+            <a href="index.html" class="navbar__logo">
+                <span class="navbar__logo-icon">💜</span>
+                <span class="navbar__logo-text">MoodSync</span>
+            </a>
+            <ul class="navbar__links">
+                <li><a href="#how-it-works">How It Works</a></li>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#privacy">Privacy</a></li>
+            </ul>
+            <a href="login.html" class="btn btn--sm btn--outline">Open App</a>
+            <button class="navbar__hamburger" aria-label="Toggle navigation">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ========== HERO ========== -->
+    <header class="hero" id="hero">
+        <div class="container hero__inner">
+            <p class="hero__badge">Relationship Analytics for Couples</p>
+            <h1 class="hero__title">
+                <span class="hero__title-line">MoodSync</span>
+            </h1>
+            <p class="hero__tagline">Understand Your Relationship Better</p>
+            <p class="hero__description">
+                Log your daily mood, sync with your partner, and uncover
+                powerful insights about your relationship health — all in a
+                private, emotionally safe space.
+            </p>
+            <div class="hero__cta-group">
+                <a href="login.html" class="btn btn--glass btn--lg">
+                    <span class="btn__icon">✨</span>
+                    Start Logging Mood
+                </a>
+                <a href="#how-it-works" class="btn btn--ghost btn--lg">
+                    Learn More ↓
+                </a>
+            </div>
+            <!-- Floating mood emojis -->
+            <div class="hero__emojis" aria-hidden="true">
+                <span class="floating-emoji floating-emoji--1">😊</span>
+                <span class="floating-emoji floating-emoji--2">💕</span>
+                <span class="floating-emoji floating-emoji--3">🥰</span>
+                <span class="floating-emoji floating-emoji--4">✨</span>
+                <span class="floating-emoji floating-emoji--5">💜</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- ========== HOW IT WORKS ========== -->
+    <section class="section how-it-works" id="how-it-works">
+        <div class="container">
+            <div class="section__header">
+                <p class="section__label">Simple & Meaningful</p>
+                <h2 class="section__title">How It Works</h2>
+                <p class="section__subtitle">Three easy steps to deeper understanding</p>
+            </div>
+            <div class="steps-grid">
+                <!-- Step 1 -->
+                <div class="step-card glass-card">
+                    <div class="step-card__number">01</div>
+                    <div class="step-card__icon">📝</div>
+                    <h3 class="step-card__title">Log Your Mood Daily</h3>
+                    <p class="step-card__text">
+                        Take 30 seconds each day to check in with yourself.
+                        Choose from a range of moods and add optional notes.
+                    </p>
+                </div>
+                <!-- Step 2 -->
+                <div class="step-card glass-card">
+                    <div class="step-card__number">02</div>
+                    <div class="step-card__icon">🔗</div>
+                    <h3 class="step-card__title">Sync With Your Partner</h3>
+                    <p class="step-card__text">
+                        Connect your mood logs with your partner's to create a
+                        shared emotional timeline of your relationship.
+                    </p>
+                </div>
+                <!-- Step 3 -->
+                <div class="step-card glass-card">
+                    <div class="step-card__number">03</div>
+                    <div class="step-card__icon">📊</div>
+                    <h3 class="step-card__title">See Relationship Insights</h3>
+                    <p class="step-card__text">
+                        Get a Relationship Health Score, trend analysis, and
+                        personalised advice to grow closer together.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== FEATURES ========== -->
+    <section class="section features" id="features">
+        <div class="container">
+            <div class="section__header">
+                <p class="section__label">What You Unlock</p>
+                <h2 class="section__title">Feature Preview</h2>
+                <p class="section__subtitle">Tools designed around emotional intelligence</p>
+            </div>
+            <div class="features-grid">
+                <!-- Feature 1 -->
+                <article class="feature-card glass-card">
+                    <div class="feature-card__icon-wrap feature-card__icon-wrap--pink">
+                        <span>❤️‍🩹</span>
+                    </div>
+                    <h3 class="feature-card__title">Relationship Health Score</h3>
+                    <p class="feature-card__text">
+                        A dynamic score (0–100) calculated from mood averages,
+                        trends, differences between partners, and interaction
+                        frequency.
+                    </p>
+                    <span class="feature-card__tag">Core Metric</span>
+                </article>
+                <!-- Feature 2 -->
+                <article class="feature-card glass-card">
+                    <div class="feature-card__icon-wrap feature-card__icon-wrap--purple">
+                        <span>📈</span>
+                    </div>
+                    <h3 class="feature-card__title">Mood Trend Graph</h3>
+                    <p class="feature-card__text">
+                        Visualise how each partner's mood evolves over days and
+                        weeks. Spot patterns, dips, and moments of alignment.
+                    </p>
+                    <span class="feature-card__tag">Visual Insight</span>
+                </article>
+                <!-- Feature 3 -->
+                <article class="feature-card glass-card">
+                    <div class="feature-card__icon-wrap feature-card__icon-wrap--blue">
+                        <span>⚖️</span>
+                    </div>
+                    <h3 class="feature-card__title">Mood Difference Meter</h3>
+                    <p class="feature-card__text">
+                        See how far apart your moods are on any given day.
+                        Understand when you're in sync — and when you're not.
+                    </p>
+                    <span class="feature-card__tag">Couple Metric</span>
+                </article>
+                <!-- Feature 4 -->
+                <article class="feature-card glass-card">
+                    <div class="feature-card__icon-wrap feature-card__icon-wrap--lavender">
+                        <span>🤖</span>
+                    </div>
+                    <h3 class="feature-card__title">AI Advice System</h3>
+                    <p class="feature-card__text">
+                        Receive gentle, context-aware suggestions to improve
+                        communication and emotional connection with your partner.
+                    </p>
+                    <span class="feature-card__tag">Coming Soon</span>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== PRIVACY ========== -->
+    <section class="section privacy" id="privacy">
+        <div class="container">
+            <div class="privacy__inner glass-card">
+                <div class="privacy__content">
+                    <p class="section__label">Your Emotions Are Safe</p>
+                    <h2 class="section__title">Built Around Privacy</h2>
+                    <p class="privacy__text">
+                        MoodSync is designed with emotional safety at its core.
+                        Your mood data stays private and is never shared with
+                        third parties. You have full control over your data and
+                        can delete it at any time.
+                    </p>
+                    <ul class="privacy__list">
+                        <li>
+                            <span class="privacy__check">🔒</span>
+                            Your data is private and encrypted
+                        </li>
+                        <li>
+                            <span class="privacy__check">🎛️</span>
+                            Full control — export or delete anytime
+                        </li>
+                        <li>
+                            <span class="privacy__check">💚</span>
+                            Focus on emotional wellbeing, not metrics
+                        </li>
+                    </ul>
+                </div>
+                <div class="privacy__visual" aria-hidden="true">
+                    <div class="privacy__shield">🛡️</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== FINAL CTA ========== -->
+    <section class="section cta" id="cta">
+        <div class="container cta__inner">
+            <h2 class="cta__title">Ready to Understand Each Other Better?</h2>
+            <p class="cta__text">
+                Start your emotional check-in today. It only takes 30 seconds.
+            </p>
+            <a href="login.html" class="btn btn--glass btn--lg">
+                <span class="btn__icon">💜</span>
+                Start Logging Mood
+            </a>
+        </div>
+    </section>
+
+    <!-- ========== FOOTER ========== -->
+    <footer class="footer">
+        <div class="container footer__inner">
+            <div class="footer__brand">
+                <span class="navbar__logo-icon">💜</span>
+                <span class="navbar__logo-text">MoodSync</span>
+            </div>
+            <p class="footer__copy">&copy; 2026 MoodSync. Made with love for couples who care.</p>
+            <ul class="footer__links">
+                <li><a href="mood.html">Log Mood</a></li>
+                <li><a href="dashboard.html">Dashboard</a></li>
+                <li><a href="setup.html">Setup</a></li>
+            </ul>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

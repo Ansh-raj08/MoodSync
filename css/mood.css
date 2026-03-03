@@ -1,0 +1,366 @@
+/* ============================================================
+   MOOD PAGE — Daily Mood Log
+   Extends the MoodSync Liquid Glass design system (style.css)
+   ============================================================ */
+
+.mood-page {
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    align-items: center;
+    padding: 7rem 0 4rem;
+}
+
+.mood-page .container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    width: 100%;
+}
+
+/* ---------- Already-logged banner ---------- */
+.mood-logged-banner {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.2rem 1.6rem;
+    width: 100%;
+    max-width: 560px;
+    border-radius: var(--radius-lg);
+}
+
+.mood-logged-banner__icon {
+    font-size: 2.2rem;
+    flex-shrink: 0;
+}
+
+.mood-logged-banner__text {
+    flex: 1;
+}
+
+.mood-logged-banner__title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--clr-text);
+}
+
+.mood-logged-banner__sub {
+    font-size: 0.8rem;
+    color: var(--clr-text-secondary);
+    margin-top: 0.1rem;
+}
+
+/* ---------- Mood card ---------- */
+.mood-section {
+    width: 100%;
+    max-width: 560px;
+}
+
+.mood-card {
+    padding: 2.5rem 2.5rem 2rem;
+    position: relative;
+}
+
+.mood-card__header {
+    text-align: center;
+    margin-bottom: 2rem;
+    position: relative;
+    z-index: 2;
+}
+
+.mood-card__date {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--clr-text-tertiary);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 0.6rem;
+}
+
+.mood-card__title {
+    font-family: var(--ff-sans);
+    font-size: clamp(1.3rem, 3.5vw, 1.7rem);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    margin-bottom: 0.4rem;
+    background: var(--grad-accent-flow);
+    background-size: 300% 300%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: gradientFlow 8s ease infinite;
+}
+
+.mood-card__sub {
+    font-size: 0.88rem;
+    color: var(--clr-text-secondary);
+}
+
+/* ---------- Mood Form ---------- */
+.mood-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.8rem;
+    position: relative;
+    z-index: 2;
+}
+
+/* ---------- Mood Picker ---------- */
+.mood-picker {
+    border: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 0.6rem;
+}
+
+.mood-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    cursor: pointer;
+}
+
+.mood-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+}
+
+.mood-option__emoji {
+    font-size: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    border-radius: var(--radius-md);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1.5px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(12px) saturate(140%);
+    -webkit-backdrop-filter: blur(12px) saturate(140%);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06),
+                inset 0 1px 0 rgba(255, 255, 255, 0.07);
+    transition: all var(--duration-fast) var(--ease-spring);
+    line-height: 1;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Specular shine on emoji tile */
+.mood-option__emoji::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 5%; right: 5%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+    pointer-events: none;
+}
+
+.mood-option__label {
+    font-size: 0.68rem;
+    font-weight: 500;
+    color: var(--clr-text-tertiary);
+    letter-spacing: 0.02em;
+    transition: color var(--duration-fast) var(--ease-smooth);
+    text-align: center;
+}
+
+/* Hover state */
+.mood-option:hover .mood-option__emoji {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-3px) scale(1.06);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.mood-option:hover .mood-option__label {
+    color: var(--clr-text-secondary);
+}
+
+/* Selected state */
+.mood-option input:checked ~ .mood-option__emoji {
+    background: rgba(201, 140, 245, 0.18);
+    border-color: rgba(201, 140, 245, 0.55);
+    transform: translateY(-4px) scale(1.1);
+    box-shadow: 0 8px 24px rgba(184, 126, 224, 0.2),
+                0 0 0 3px rgba(201, 140, 245, 0.12),
+                inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.mood-option input:checked ~ .mood-option__label {
+    color: var(--clr-lavender);
+    font-weight: 600;
+}
+
+/* ---------- Note textarea ---------- */
+.mood-note {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.mood-note__label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--clr-text-secondary);
+    letter-spacing: 0.02em;
+    padding-left: 0.2rem;
+}
+
+.mood-note__optional {
+    font-weight: 400;
+    color: var(--clr-text-tertiary);
+}
+
+.mood-note__input {
+    font-family: var(--ff-sans);
+    font-size: 0.92rem;
+    font-weight: 400;
+    color: var(--clr-text);
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: var(--radius-sm);
+    padding: 0.85rem 1rem;
+    outline: none;
+    width: 100%;
+    resize: vertical;
+    min-height: 90px;
+    transition: all var(--duration-fast) var(--ease-smooth);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05),
+                inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.mood-note__input::placeholder {
+    color: var(--clr-text-tertiary);
+}
+
+.mood-note__input:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.mood-note__input:focus {
+    border-color: rgba(201, 140, 245, 0.5);
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05),
+                0 0 0 3px rgba(201, 140, 245, 0.12),
+                inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.mood-note__count {
+    font-size: 0.72rem;
+    color: var(--clr-text-tertiary);
+    text-align: right;
+    padding-right: 0.2rem;
+}
+
+/* ---------- Submit ---------- */
+.mood-submit {
+    width: 100%;
+    justify-content: center;
+}
+
+.mood-privacy {
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--clr-text-tertiary);
+    font-weight: 400;
+    letter-spacing: 0.01em;
+}
+
+/* ---------- Success State ---------- */
+.mood-success {
+    width: 100%;
+    max-width: 560px;
+    padding: 3.5rem 2.5rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.mood-success__emoji {
+    font-size: 4rem;
+    animation: successBounce 0.6s var(--ease-spring) both;
+}
+
+@keyframes successBounce {
+    0%   { transform: scale(0.4); opacity: 0; }
+    100% { transform: scale(1);   opacity: 1; }
+}
+
+.mood-success__title {
+    font-family: var(--ff-sans);
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    background: var(--grad-accent-flow);
+    background-size: 300% 300%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: gradientFlow 8s ease infinite;
+}
+
+.mood-success__text {
+    font-size: 0.95rem;
+    color: var(--clr-text-secondary);
+}
+
+.mood-success__actions {
+    display: flex;
+    gap: 0.8rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 0.5rem;
+}
+
+/* Screen-reader only */
+.sr-only {
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden;
+    clip: rect(0,0,0,0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 640px) {
+    .mood-page { padding: 6rem 0 3rem; }
+    .mood-card { padding: 1.8rem 1.4rem 1.6rem; }
+
+    .mood-picker {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.8rem;
+    }
+
+    .mood-option__emoji {
+        width: 100%;
+        height: 60px;
+        font-size: 1.8rem;
+    }
+
+    .mood-logged-banner {
+        flex-wrap: wrap;
+        justify-content: center;
+        text-align: center;
+    }
+}
+
+@media (max-width: 380px) {
+    .mood-picker {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}

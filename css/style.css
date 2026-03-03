@@ -1,0 +1,1218 @@
+/* ============================================================
+   MoodSync — iOS 26 Liquid Glass Design System
+   Apple-inspired translucent glass · Specular highlights
+   Refractive shine · Luminous depth · Dynamic tinting
+   ============================================================ */
+
+/* ---------- CSS Custom Properties ---------- */
+:root {
+    /* Background */
+    --clr-bg:            #0a0a1a;
+    --clr-bg-mesh-1:     #1a0533;
+    --clr-bg-mesh-2:     #0c1445;
+    --clr-bg-mesh-3:     #2d0a3e;
+
+    /* Liquid Glass surfaces */
+    --glass-bg:          rgba(255, 255, 255, 0.08);
+    --glass-bg-hover:    rgba(255, 255, 255, 0.12);
+    --glass-bg-elevated: rgba(255, 255, 255, 0.10);
+    --glass-border:      rgba(255, 255, 255, 0.15);
+    --glass-border-hover:rgba(255, 255, 255, 0.25);
+    --glass-highlight:   rgba(255, 255, 255, 0.25);
+    --glass-inner-shadow:rgba(255, 255, 255, 0.05);
+    --glass-blur:        40px;
+    --glass-saturate:    180%;
+
+    /* Accent palette — soft, dreamy, iOS-like */
+    --clr-pink:     #f7a0be;
+    --clr-rose:     #f27a96;
+    --clr-lavender: #c98cf5;
+    --clr-purple:   #b87ee0;
+    --clr-indigo:   #7b7ae6;
+    --clr-blue:     #5ea3f5;
+    --clr-teal:     #7dd3f8;
+    --clr-mint:     #88ddd8;
+
+    /* Text */
+    --clr-text:         rgba(255, 255, 255, 0.92);
+    --clr-text-secondary: rgba(255, 255, 255, 0.55);
+    --clr-text-tertiary:  rgba(255, 255, 255, 0.35);
+    --clr-white:        #ffffff;
+
+    /* Gradients — soft flowing */
+    --grad-accent:   linear-gradient(135deg, var(--clr-pink), var(--clr-lavender), var(--clr-indigo), var(--clr-teal));
+    --grad-accent-flow: linear-gradient(135deg, var(--clr-pink), var(--clr-lavender), var(--clr-indigo), var(--clr-teal), var(--clr-pink));
+    --grad-shine:    linear-gradient(135deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.0) 50%, rgba(255,255,255,0.06) 100%);
+    --grad-top-edge: linear-gradient(180deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 100%);
+    --grad-bg-mesh:  radial-gradient(ellipse at 20% 20%, var(--clr-bg-mesh-1) 0%, transparent 50%),
+                     radial-gradient(ellipse at 80% 30%, var(--clr-bg-mesh-2) 0%, transparent 50%),
+                     radial-gradient(ellipse at 50% 80%, var(--clr-bg-mesh-3) 0%, transparent 50%),
+                     var(--clr-bg);
+
+    /* Typography — SF Pro-like */
+    --ff-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', system-ui, sans-serif;
+
+    /* Layout */
+    --section-py: 6.5rem;
+    --container:  1120px;
+
+    /* Radii — continuous (squircle-like) */
+    --radius-xs:  10px;
+    --radius-sm:  16px;
+    --radius-md:  22px;
+    --radius-lg:  28px;
+    --radius-xl:  36px;
+    --radius-pill: 100px;
+
+    /* Shadows — layered depth */
+    --shadow-glass:     0 2px 4px rgba(0,0,0,0.08),
+                        0 8px 24px rgba(0,0,0,0.15),
+                        0 24px 48px rgba(0,0,0,0.12);
+    --shadow-glass-lg:  0 4px 8px rgba(0,0,0,0.1),
+                        0 16px 40px rgba(0,0,0,0.2),
+                        0 40px 80px rgba(0,0,0,0.15);
+    --shadow-glow:      0 0 50px rgba(184, 126, 224, 0.12);
+    --shadow-btn:       0 4px 16px rgba(184, 126, 224, 0.25),
+                        0 8px 32px rgba(184, 126, 224, 0.12);
+
+    /* Motion — Apple-like spring/ease */
+    --ease-spring:  cubic-bezier(0.34, 1.56, 0.64, 1);
+    --ease-smooth:  cubic-bezier(0.25, 0.1, 0.25, 1);
+    --ease-out:     cubic-bezier(0, 0, 0.2, 1);
+    --duration:     0.4s;
+    --duration-fast:0.25s;
+}
+
+/* ---------- Reset & Base ---------- */
+*,
+*::before,
+*::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 80px;
+    font-size: 16px;
+}
+
+body {
+    font-family: var(--ff-sans);
+    background: var(--grad-bg-mesh);
+    background-attachment: fixed;
+    color: var(--clr-text);
+    line-height: 1.65;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: 'ss01', 'cv01';
+}
+
+img { max-width: 100%; display: block; }
+a   { color: inherit; text-decoration: none; }
+ul  { list-style: none; }
+
+/* ---------- Utility ---------- */
+.container {
+    width: 88%;
+    max-width: var(--container);
+    margin-inline: auto;
+}
+
+/* ============================================================
+   ANIMATED BACKGROUND ORBS — Softer, more diffuse
+   ============================================================ */
+.bg-orbs {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(140px);
+    opacity: 0.28;
+    animation: orbDrift 20s ease-in-out infinite alternate;
+    will-change: transform;
+}
+
+.orb--1 {
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, var(--clr-lavender), transparent 70%);
+    top: -15%; left: -10%;
+    animation-duration: 25s;
+}
+.orb--2 {
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, var(--clr-pink), transparent 70%);
+    top: 25%; right: -8%;
+    animation-duration: 28s;
+    animation-delay: -6s;
+}
+.orb--3 {
+    width: 450px; height: 450px;
+    background: radial-gradient(circle, var(--clr-indigo), transparent 70%);
+    bottom: 5%; left: 15%;
+    animation-duration: 22s;
+    animation-delay: -12s;
+}
+.orb--4 {
+    width: 350px; height: 350px;
+    background: radial-gradient(circle, var(--clr-teal), transparent 70%);
+    top: 55%; left: 50%;
+    animation-duration: 30s;
+    animation-delay: -8s;
+    opacity: 0.25;
+}
+
+@keyframes orbDrift {
+    0%   { transform: translate(0, 0) scale(1); }
+    33%  { transform: translate(40px, -30px) scale(1.08); }
+    66%  { transform: translate(-20px, 40px) scale(0.95); }
+    100% { transform: translate(30px, -50px) scale(1.05); }
+}
+
+@keyframes gradientFlow {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* ============================================================
+   LIQUID GLASS CARD — iOS 26 Signature Component
+   ============================================================ */
+.glass-card {
+    position: relative;
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-glass),
+                inset 0 1px 0 var(--glass-inner-shadow);
+    overflow: hidden;
+    transition: transform var(--duration) var(--ease-smooth),
+                border-color var(--duration) var(--ease-smooth),
+                box-shadow var(--duration) var(--ease-smooth),
+                background var(--duration) var(--ease-smooth);
+}
+
+/* Specular highlight — top edge refraction */
+.glass-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(255,255,255,0.0) 10%,
+        rgba(255,255,255,0.4) 30%,
+        rgba(255,255,255,0.5) 50%,
+        rgba(255,255,255,0.4) 70%,
+        rgba(255,255,255,0.0) 90%,
+        transparent 100%
+    );
+    z-index: 2;
+    pointer-events: none;
+}
+
+/* Diagonal shine / light refraction */
+.glass-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: var(--grad-shine);
+    border-radius: inherit;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.6;
+    transition: opacity var(--duration) var(--ease-smooth);
+}
+
+.glass-card:hover {
+    transform: translateY(-4px) scale(1.01);
+    border-color: var(--glass-border-hover);
+    background: var(--glass-bg-hover);
+    box-shadow: var(--shadow-glass-lg),
+                var(--shadow-glow),
+                inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+.glass-card:hover::after {
+    opacity: 0.9;
+}
+
+/* ---------- Fade-in on scroll ---------- */
+.fade-target {
+    opacity: 0;
+    transform: translateY(28px) scale(0.98);
+    transition: opacity 0.7s var(--ease-out),
+                transform 0.7s var(--ease-out);
+}
+
+.fade-target.is-visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+/* ============================================================
+   BUTTONS — Liquid Glass Pill Style
+   ============================================================ */
+.btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--ff-sans);
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    border-radius: var(--radius-pill);
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    transition: transform var(--duration-fast) var(--ease-spring),
+                box-shadow var(--duration) var(--ease-smooth),
+                background var(--duration) var(--ease-smooth);
+}
+
+.btn--lg {
+    padding: 0.95rem 2rem;
+    font-size: 1rem;
+    letter-spacing: -0.01em;
+}
+
+.btn--sm {
+    padding: 0.5rem 1.3rem;
+    font-size: 0.85rem;
+}
+
+.btn--primary {
+    background: var(--grad-accent);
+    color: var(--clr-white);
+    box-shadow: var(--shadow-btn);
+}
+
+/* Glass shine on button */
+.btn--primary::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 50%;
+    background: linear-gradient(180deg, rgba(255,255,255,0.25), transparent);
+    border-radius: inherit;
+    pointer-events: none;
+}
+
+.btn--primary:hover {
+    transform: translateY(-2px) scale(1.04);
+    box-shadow: 0 6px 24px rgba(175, 82, 222, 0.45),
+                0 12px 40px rgba(175, 82, 222, 0.2);
+}
+
+.btn--primary:active {
+    transform: translateY(0) scale(0.98);
+}
+
+/* Liquid Glass CTA — iOS 26 frosted translucent pill */
+.btn--glass {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(40px) saturate(180%);
+    -webkit-backdrop-filter: blur(40px) saturate(180%);
+    color: var(--clr-white);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1),
+                0 8px 24px rgba(0, 0, 0, 0.12),
+                inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+/* Specular top-edge shine */
+.btn--glass::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 10%; right: 10%;
+    height: 1px;
+    background: linear-gradient(90deg,
+        transparent,
+        rgba(255, 255, 255, 0.5),
+        transparent
+    );
+    pointer-events: none;
+}
+
+/* Inner light refraction overlay */
+.btn--glass::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 50%;
+    background: linear-gradient(180deg,
+        rgba(255, 255, 255, 0.12),
+        transparent
+    );
+    border-radius: inherit;
+    pointer-events: none;
+}
+
+.btn--glass:hover {
+    background: rgba(255, 255, 255, 0.16);
+    border-color: rgba(255, 255, 255, 0.32);
+    transform: translateY(-2px) scale(1.03);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12),
+                0 16px 40px rgba(0, 0, 0, 0.15),
+                0 0 30px rgba(175, 82, 222, 0.12),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.btn--glass:active {
+    transform: translateY(0) scale(0.97);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.btn--outline {
+    background: var(--glass-bg);
+    color: var(--clr-text);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
+}
+
+.btn--outline::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    pointer-events: none;
+}
+
+.btn--outline:hover {
+    background: var(--glass-bg-hover);
+    border-color: var(--glass-border-hover);
+    transform: translateY(-1px);
+}
+
+.btn--ghost {
+    background: transparent;
+    color: var(--clr-text-secondary);
+    border: 1px solid transparent;
+}
+
+.btn--ghost:hover {
+    color: var(--clr-text);
+    background: rgba(255, 255, 255, 0.07);
+    border-color: var(--glass-border);
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06),
+                inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+.btn__icon {
+    font-size: 1.1em;
+}
+
+/* ============================================================
+   NAVBAR — Floating Liquid Glass Bar
+   ============================================================ */
+.navbar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 1000;
+    padding: 0.8rem 0;
+    transition: all var(--duration) var(--ease-smooth);
+}
+
+.navbar--scrolled {
+    background: rgba(10, 10, 26, 0.6);
+    backdrop-filter: blur(50px) saturate(180%);
+    -webkit-backdrop-filter: blur(50px) saturate(180%);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.08),
+                0 8px 32px rgba(0,0,0,0.3);
+    padding: 0.5rem 0;
+}
+
+/* Subtle bottom edge highlight when scrolled */
+.navbar--scrolled::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 5%; right: 5%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+}
+
+.navbar__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.navbar__logo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 700;
+    font-size: 1.2rem;
+}
+
+.navbar__logo-icon { font-size: 1.3rem; }
+.navbar__logo-text {
+    background: var(--grad-accent-flow);
+    background-size: 300% 300%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -0.02em;
+    animation: gradientFlow 6s ease infinite;
+}
+
+.navbar__links {
+    display: flex;
+    gap: 2rem;
+}
+
+.navbar__links a {
+    font-size: 0.88rem;
+    font-weight: 500;
+    color: var(--clr-text-secondary);
+    transition: color var(--duration-fast) var(--ease-smooth);
+    position: relative;
+    letter-spacing: -0.01em;
+}
+
+.navbar__links a::after {
+    content: '';
+    position: absolute;
+    bottom: -4px; left: 50%;
+    width: 0; height: 2px;
+    background: var(--clr-lavender);
+    transition: all var(--duration-fast) var(--ease-spring);
+    border-radius: 2px;
+    transform: translateX(-50%);
+}
+
+.navbar__links a:hover {
+    color: var(--clr-white);
+}
+
+.navbar__links a:hover::after {
+    width: 20px;
+}
+
+/* Hamburger */
+.navbar__hamburger {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+}
+
+.navbar__hamburger span {
+    display: block;
+    width: 22px; height: 2px;
+    background: var(--clr-text);
+    border-radius: 2px;
+    transition: all var(--duration-fast) var(--ease-spring);
+}
+
+.navbar__hamburger.is-active span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.navbar__hamburger.is-active span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+.navbar__hamburger.is-active span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+/* ============================================================
+   HERO
+   ============================================================ */
+.hero {
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    align-items: center;
+    text-align: center;
+    padding: 8rem 0 5rem;
+    position: relative;
+}
+
+.hero__inner {
+    position: relative;
+    z-index: 1;
+}
+
+.hero__badge {
+    display: inline-block;
+    padding: 0.38rem 1.1rem;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-pill);
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--clr-text-secondary);
+    letter-spacing: 0.03em;
+    margin-bottom: 2rem;
+    backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Badge top-edge shine */
+.hero__badge::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 20%; right: 20%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+}
+
+.hero__title {
+    font-family: var(--ff-sans);
+    font-size: clamp(3.2rem, 9vw, 6.5rem);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -0.04em;
+    margin-bottom: 0.6rem;
+    /* Liquid glass text — translucent frosted fill */
+    background: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.95) 0%,
+        rgba(255, 255, 255, 0.55) 50%,
+        rgba(255, 255, 255, 0.3) 100%
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15))
+            drop-shadow(0 0 40px rgba(201, 140, 245, 0.2))
+            drop-shadow(0 0 80px rgba(123, 122, 230, 0.1));
+}
+
+.hero__tagline {
+    font-size: clamp(1.1rem, 2.5vw, 1.5rem);
+    color: var(--clr-text-secondary);
+    font-weight: 400;
+    margin-bottom: 1.2rem;
+    letter-spacing: -0.01em;
+}
+
+.hero__description {
+    max-width: 540px;
+    margin-inline: auto;
+    font-size: 1rem;
+    color: var(--clr-text-secondary);
+    margin-bottom: 2.5rem;
+    line-height: 1.75;
+}
+
+.hero__cta-group {
+    display: flex;
+    gap: 0.8rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* Floating emojis — more subtle */
+.hero__emojis {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.floating-emoji {
+    position: absolute;
+    font-size: 1.4rem;
+    opacity: 0.15;
+    animation: emojiGlide 10s ease-in-out infinite alternate;
+    filter: blur(0.5px);
+}
+
+.floating-emoji--1 { top: 10%; left: 10%;  animation-duration: 8s; }
+.floating-emoji--2 { top: 22%; right: 14%; animation-duration: 12s; animation-delay: -3s; }
+.floating-emoji--3 { bottom: 28%; left: 6%; animation-duration: 14s; animation-delay: -5s; }
+.floating-emoji--4 { top: 12%; right: 22%; animation-duration: 9s; animation-delay: -7s; }
+.floating-emoji--5 { bottom: 18%; right: 8%; animation-duration: 11s; animation-delay: -2s; }
+
+@keyframes emojiGlide {
+    0%   { transform: translate(0, 0) scale(1) rotate(0deg); }
+    100% { transform: translate(10px, -18px) scale(1.1) rotate(8deg); }
+}
+
+/* ============================================================
+   SECTIONS — SHARED
+   ============================================================ */
+.section {
+    padding: var(--section-py) 0;
+    position: relative;
+}
+
+.section__header {
+    text-align: center;
+    margin-bottom: 3.5rem;
+}
+
+.section__label {
+    display: inline-block;
+    padding: 0.32rem 0.9rem;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-pill);
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--clr-text-secondary);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+    backdrop-filter: blur(24px) saturate(160%);
+    -webkit-backdrop-filter: blur(24px) saturate(160%);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06),
+                inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+/* Label specular shine */
+.section__label::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 15%; right: 15%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    pointer-events: none;
+}
+
+.section__title {
+    font-family: var(--ff-sans);
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    margin-bottom: 0.5rem;
+    background: var(--grad-accent-flow);
+    background-size: 300% 300%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: gradientFlow 8s ease infinite;
+}
+
+.section__subtitle {
+    color: var(--clr-text-secondary);
+    font-size: 1rem;
+    font-weight: 400;
+}
+
+/* ============================================================
+   HOW IT WORKS — LIQUID GLASS STEP CARDS
+   ============================================================ */
+.steps-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+}
+
+.step-card {
+    padding: 2.2rem 1.8rem;
+    text-align: center;
+    position: relative;
+}
+
+.step-card__number {
+    position: absolute;
+    top: 14px; right: 18px;
+    font-size: 3rem;
+    font-weight: 800;
+    opacity: 0.04;
+    line-height: 1;
+    color: var(--clr-white);
+    letter-spacing: -0.02em;
+}
+
+.step-card__icon {
+    font-size: 2.4rem;
+    margin-bottom: 1rem;
+    /* Liquid glass circle behind icon */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px; height: 64px;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06),
+                inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+.step-card__title {
+    font-size: 1.08rem;
+    font-weight: 600;
+    margin-bottom: 0.6rem;
+    color: var(--clr-white);
+    letter-spacing: -0.01em;
+}
+
+.step-card__text {
+    font-size: 0.88rem;
+    color: var(--clr-text-secondary);
+    line-height: 1.65;
+}
+
+/* ============================================================
+   FEATURES — LIQUID GLASS FEATURE CARDS
+   ============================================================ */
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+}
+
+.feature-card {
+    padding: 2.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    position: relative;
+}
+
+.feature-card__icon-wrap {
+    width: 52px; height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 16px;
+    font-size: 1.5rem;
+    position: relative;
+    border: 1px solid rgba(255,255,255,0.1);
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05),
+                inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+/* Color tinting for icon backgrounds — iOS vibrancy style */
+.feature-card__icon-wrap--pink {
+    background: rgba(255, 107, 157, 0.12);
+    box-shadow: 0 0 20px rgba(255, 107, 157, 0.08);
+}
+.feature-card__icon-wrap--purple {
+    background: rgba(175, 82, 222, 0.12);
+    box-shadow: 0 0 20px rgba(175, 82, 222, 0.08);
+}
+.feature-card__icon-wrap--blue {
+    background: rgba(88, 86, 214, 0.12);
+    box-shadow: 0 0 20px rgba(88, 86, 214, 0.08);
+}
+.feature-card__icon-wrap--lavender {
+    background: rgba(191, 90, 242, 0.12);
+    box-shadow: 0 0 20px rgba(191, 90, 242, 0.08);
+}
+
+.feature-card__title {
+    font-size: 1.08rem;
+    font-weight: 600;
+    color: var(--clr-white);
+    letter-spacing: -0.01em;
+}
+
+.feature-card__text {
+    font-size: 0.88rem;
+    color: var(--clr-text-secondary);
+    line-height: 1.65;
+}
+
+.feature-card__tag {
+    display: inline-block;
+    width: fit-content;
+    padding: 0.22rem 0.65rem;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: var(--radius-pill);
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--clr-text-secondary);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-top: auto;
+    backdrop-filter: blur(12px) saturate(130%);
+    -webkit-backdrop-filter: blur(12px) saturate(130%);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04),
+                inset 0 1px 0 rgba(255,255,255,0.06);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Tag specular shine */
+.feature-card__tag::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 20%; right: 20%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    pointer-events: none;
+}
+
+/* ============================================================
+   PRIVACY — Elevated Liquid Glass Panel
+   ============================================================ */
+.privacy__inner {
+    display: flex;
+    align-items: center;
+    gap: 3rem;
+    padding: 3rem;
+}
+
+.privacy__content {
+    flex: 1;
+}
+
+.privacy__content .section__label { margin-bottom: 0.8rem; }
+.privacy__content .section__title { text-align: left; }
+
+.privacy__text {
+    color: var(--clr-text-secondary);
+    font-size: 0.95rem;
+    margin: 1rem 0 1.5rem;
+    line-height: 1.75;
+}
+
+.privacy__list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+}
+
+.privacy__list li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.92rem;
+    font-weight: 500;
+    color: var(--clr-text);
+    padding: 0.6rem 0.8rem;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: var(--radius-sm);
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05),
+                inset 0 1px 0 rgba(255,255,255,0.06);
+    transition: all var(--duration-fast) var(--ease-smooth);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Privacy item specular shine */
+.privacy__list li::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 10%; right: 10%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+    pointer-events: none;
+}
+
+.privacy__list li:hover {
+    background: rgba(255,255,255,0.1);
+    border-color: rgba(255,255,255,0.16);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08),
+                inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+.privacy__check {
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.privacy__visual {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.privacy__shield {
+    font-size: 5rem;
+    opacity: 0.2;
+    animation: shieldBreath 5s ease-in-out infinite;
+    filter: drop-shadow(0 0 20px rgba(175, 82, 222, 0.2));
+}
+
+@keyframes shieldBreath {
+    0%, 100% { transform: scale(1); opacity: 0.2; }
+    50%      { transform: scale(1.06); opacity: 0.35; }
+}
+
+/* ============================================================
+   CTA — Liquid Glass Highlight Section
+   ============================================================ */
+.cta {
+    text-align: center;
+    padding: 5rem 0 6rem;
+}
+
+.cta__inner {
+    max-width: 600px;
+    margin-inline: auto;
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-xl);
+    padding: 3.5rem 2.5rem;
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--shadow-glass),
+                inset 0 1px 0 var(--glass-inner-shadow);
+}
+
+/* CTA glass specular highlight */
+.cta__inner::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(255,255,255,0.0) 10%,
+        rgba(255,255,255,0.35) 30%,
+        rgba(255,255,255,0.45) 50%,
+        rgba(255,255,255,0.35) 70%,
+        rgba(255,255,255,0.0) 90%,
+        transparent 100%
+    );
+    z-index: 2;
+    pointer-events: none;
+}
+
+/* CTA glass shine overlay */
+.cta__inner::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: var(--grad-shine);
+    border-radius: inherit;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.5;
+}
+
+.cta__title {
+    font-family: var(--ff-sans);
+    font-size: clamp(1.5rem, 3.5vw, 2.2rem);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    margin-bottom: 0.8rem;
+    background: var(--grad-accent-flow);
+    background-size: 300% 300%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: gradientFlow 8s ease infinite;
+    position: relative;
+    z-index: 2;
+}
+
+.cta__text {
+    color: var(--clr-text-secondary);
+    font-size: 1rem;
+    margin-bottom: 2rem;
+    position: relative;
+    z-index: 2;
+}
+
+.cta .btn {
+    position: relative;
+    z-index: 2;
+}
+
+/* ============================================================
+   FOOTER — Minimal Glass Divider
+   ============================================================ */
+
+/* ============================================================
+   FOOTER — Minimal Glass Divider
+   ============================================================ */
+.footer {
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding: 2rem 0;
+    background: rgba(255,255,255,0.04);
+    backdrop-filter: blur(30px) saturate(160%);
+    -webkit-backdrop-filter: blur(30px) saturate(160%);
+    position: relative;
+}
+
+/* Footer top-edge specular shine */
+.footer::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 10%; right: 10%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+    pointer-events: none;
+}
+
+.footer__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.footer__brand {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 700;
+    font-size: 1.05rem;
+}
+
+.footer__copy {
+    font-size: 0.8rem;
+    color: var(--clr-text-tertiary);
+}
+
+.footer__links {
+    display: flex;
+    gap: 1.5rem;
+}
+
+.footer__links a {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--clr-text-secondary);
+    transition: color var(--duration-fast) var(--ease-smooth);
+}
+
+.footer__links a:hover {
+    color: var(--clr-white);
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+/* ---- Tablet ---- */
+@media (max-width: 900px) {
+    .steps-grid {
+        grid-template-columns: 1fr;
+        max-width: 460px;
+        margin-inline: auto;
+    }
+
+    .features-grid {
+        grid-template-columns: 1fr;
+        max-width: 500px;
+        margin-inline: auto;
+    }
+
+    .privacy__inner {
+        flex-direction: column;
+        text-align: center;
+        padding: 2.2rem;
+    }
+
+    .privacy__content .section__title { text-align: center; }
+    .privacy__list { align-items: center; }
+    .privacy__list li { justify-content: center; }
+
+    .footer__inner {
+        flex-direction: column;
+        text-align: center;
+    }
+}
+
+/* ---- Mobile ---- */
+@media (max-width: 640px) {
+    :root {
+        --section-py: 4rem;
+        --glass-blur: 30px;
+    }
+
+    /* Navbar mobile */
+    .navbar__links {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(10, 10, 26, 0.92);
+        backdrop-filter: blur(50px) saturate(180%);
+        -webkit-backdrop-filter: blur(50px) saturate(180%);
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2.2rem;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity var(--duration) var(--ease-smooth);
+        z-index: 999;
+    }
+
+    .navbar__links.is-open {
+        opacity: 1;
+        pointer-events: all;
+    }
+
+    .navbar__links a {
+        font-size: 1.15rem;
+    }
+
+    .navbar .btn--sm {
+        display: none;
+    }
+
+    .navbar__hamburger {
+        display: flex;
+        z-index: 1001;
+    }
+
+    /* Hero */
+    .hero {
+        padding: 7rem 0 3rem;
+        min-height: auto;
+    }
+
+    .hero__description {
+        font-size: 0.92rem;
+    }
+
+    .hero__cta-group {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    /* Cards */
+    .step-card, .feature-card {
+        padding: 1.6rem 1.3rem;
+    }
+
+    .privacy__inner {
+        padding: 1.8rem 1.3rem;
+    }
+
+    .privacy__shield {
+        font-size: 3.5rem;
+    }
+
+    /* Softer orbs on mobile */
+    .orb { filter: blur(100px); opacity: 0.3; }
+    .orb--1 { width: 300px; height: 300px; }
+    .orb--2 { width: 250px; height: 250px; }
+    .orb--3 { width: 220px; height: 220px; }
+    .orb--4 { width: 180px; height: 180px; }
+}
+
+/* ---- Small phones ---- */
+@media (max-width: 380px) {
+    .hero__title { font-size: 2.6rem; }
+
+    .btn--lg {
+        padding: 0.85rem 1.6rem;
+        font-size: 0.92rem;
+    }
+}

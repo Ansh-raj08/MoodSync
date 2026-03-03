@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MoodSync — Setup Your Relationship</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/setup.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Animated Background Orbs -->
+    <div class="bg-orbs" aria-hidden="true">
+        <div class="orb orb--1"></div>
+        <div class="orb orb--2"></div>
+        <div class="orb orb--3"></div>
+        <div class="orb orb--4"></div>
+    </div>
+
+    <!-- ========== NAVBAR ========== -->
+    <nav class="navbar">
+        <div class="container navbar__inner">
+            <a href="index.html" class="navbar__logo">
+                <span class="navbar__logo-icon">💜</span>
+                <span class="navbar__logo-text">MoodSync</span>
+            </a>
+            <ul class="navbar__links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="mood.html">Log Mood</a></li>
+                <li><a href="dashboard.html">Dashboard</a></li>
+            </ul>
+            <a href="mood.html" class="btn btn--sm btn--outline">Open App</a>
+            <button class="navbar__hamburger" aria-label="Toggle navigation">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ========== MAIN ========== -->
+    <main class="setup-page">
+        <div class="container">
+            <section class="setup">
+                <div class="setup__card glass-card">
+                    <div class="setup__header">
+                        <span class="setup__icon">💜</span>
+                        <h1 class="setup__title">Create Your Relationship Space</h1>
+                        <p class="setup__subtitle">This helps MoodSync understand your relationship.</p>
+                    </div>
+
+                    <form id="setupForm" class="setup__form" autocomplete="off">
+                        <div class="form-group">
+                            <label class="form-label" for="userName">Your Name</label>
+                            <input
+                                type="text"
+                                id="userName"
+                                class="form-input"
+                                placeholder="Enter your name"
+                                required
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="partnerName">Partner's Name</label>
+                            <input
+                                type="text"
+                                id="partnerName"
+                                class="form-input"
+                                placeholder="Enter your partner's name"
+                                required
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="startDate">Relationship Start Date</label>
+                            <input
+                                type="date"
+                                id="startDate"
+                                class="form-input"
+                                required
+                            >
+                        </div>
+
+                        <button type="submit" class="btn btn--glass btn--lg setup__submit">
+                            <span class="btn__icon">✨</span>
+                            Create Relationship
+                        </button>
+
+                        <p class="setup__privacy">🔒 Your data stays only on your device.</p>
+                    </form>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- ========== FOOTER ========== -->
+    <footer class="footer">
+        <div class="container footer__inner">
+            <div class="footer__brand">
+                <span class="navbar__logo-icon">💜</span>
+                <span class="navbar__logo-text">MoodSync</span>
+            </div>
+            <p class="footer__copy">&copy; 2026 MoodSync. Made with love for couples who care.</p>
+            <ul class="footer__links">
+                <li><a href="mood.html">Log Mood</a></li>
+                <li><a href="dashboard.html">Dashboard</a></li>
+                <li><a href="setup.html">Setup</a></li>
+            </ul>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script src="js/couple.js"></script>
+</body>
+</html>

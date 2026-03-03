@@ -1,0 +1,289 @@
+/* ============================================================
+   LOGIN PAGE — Sign In
+   Extends the MoodSync Liquid Glass design system (style.css)
+   ============================================================ */
+
+.login-page {
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    align-items: center;
+    padding: 7rem 0 4rem;
+}
+
+.login {
+    max-width: 460px;
+    margin-inline: auto;
+    width: 100%;
+}
+
+/* ---------- Card ---------- */
+.login__card {
+    padding: 2.6rem 2.4rem 2.2rem;
+    position: relative;
+}
+
+/* ---------- Brand mark ---------- */
+.login__brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    margin-bottom: 1.8rem;
+    font-weight: 700;
+    font-size: 1.15rem;
+}
+
+.login__brand-icon {
+    font-size: 1.5rem;
+}
+
+.login__brand-name {
+    background: var(--grad-accent-flow);
+    background-size: 300% 300%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: gradientFlow 8s ease infinite;
+    letter-spacing: -0.02em;
+}
+
+/* ---------- Header ---------- */
+.login__header {
+    text-align: center;
+    margin-bottom: 2rem;
+    position: relative;
+    z-index: 2;
+}
+
+.login__title {
+    font-family: var(--ff-sans);
+    font-size: clamp(1.5rem, 4vw, 1.9rem);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    margin-bottom: 0.35rem;
+    background: var(--grad-accent-flow);
+    background-size: 300% 300%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: gradientFlow 8s ease infinite;
+}
+
+.login__subtitle {
+    font-size: 0.9rem;
+    color: var(--clr-text-secondary);
+    font-weight: 400;
+}
+
+/* ---------- Form ---------- */
+.login__form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.3rem;
+    position: relative;
+    z-index: 2;
+}
+
+/* Inherit base form-group / form-label / form-input from style.css */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.form-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--clr-text-secondary);
+    letter-spacing: 0.02em;
+    padding-left: 0.2rem;
+}
+
+/* ---------- Input wrapper (icon + field + toggle) ---------- */
+.input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-icon {
+    position: absolute;
+    left: 0.9rem;
+    font-size: 0.95rem;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.55;
+    line-height: 1;
+}
+
+.form-input {
+    font-family: var(--ff-sans);
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--clr-text);
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: var(--radius-sm);
+    padding: 0.85rem 1rem;
+    outline: none;
+    width: 100%;
+    transition: all var(--duration-fast) var(--ease-smooth);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05),
+                inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.input-with-icon {
+    padding-left: 2.6rem;
+}
+
+.form-input::placeholder {
+    color: var(--clr-text-tertiary);
+    font-weight: 400;
+}
+
+.form-input:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.form-input:focus {
+    border-color: rgba(201, 140, 245, 0.5);
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05),
+                0 0 0 3px rgba(201, 140, 245, 0.12),
+                inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* Error state */
+.form-group--error .form-input {
+    border-color: rgba(247, 100, 130, 0.55);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05),
+                0 0 0 3px rgba(247, 100, 130, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* ---------- Password toggle button ---------- */
+.toggle-password {
+    position: absolute;
+    right: 0.9rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.95rem;
+    opacity: 0.45;
+    padding: 0;
+    line-height: 1;
+    transition: opacity var(--duration-fast) var(--ease-smooth);
+    z-index: 1;
+}
+
+.toggle-password:hover {
+    opacity: 0.8;
+}
+
+/* ---------- Label row (label + forgot) ---------- */
+.label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.forgot-link {
+    font-family: var(--ff-sans);
+    font-size: 0.76rem;
+    font-weight: 500;
+    color: var(--clr-lavender);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    transition: color var(--duration-fast) var(--ease-smooth);
+    letter-spacing: 0.01em;
+}
+
+.forgot-link:hover {
+    color: var(--clr-pink);
+}
+
+/* ---------- Field-level error ---------- */
+.field-error {
+    font-size: 0.76rem;
+    font-weight: 500;
+    color: rgba(247, 130, 150, 0.9);
+    padding-left: 0.2rem;
+    margin-top: -0.15rem;
+}
+
+/* ---------- Form-level error ---------- */
+.form-error {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: rgba(247, 130, 150, 0.9);
+    text-align: center;
+    padding: 0.75rem 1rem;
+    border-color: rgba(247, 100, 130, 0.3) !important;
+    border-radius: var(--radius-sm) !important;
+    background: rgba(247, 100, 130, 0.07) !important;
+}
+
+/* ---------- Submit button ---------- */
+.login__submit {
+    width: 100%;
+    justify-content: center;
+    margin-top: 0.3rem;
+}
+
+/* Loading state */
+.login__submit.is-loading {
+    opacity: 0.7;
+    pointer-events: none;
+    cursor: not-allowed;
+}
+
+/* ---------- Divider ---------- */
+.login__divider {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    color: var(--clr-text-tertiary);
+    font-size: 0.78rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.login__divider::before,
+.login__divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+/* ---------- Sign up button ---------- */
+.login__signup {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+}
+
+/* ---------- Privacy note ---------- */
+.login__privacy {
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--clr-text-tertiary);
+    font-weight: 400;
+    letter-spacing: 0.01em;
+    margin-top: 1rem;
+    position: relative;
+    z-index: 2;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 640px) {
+    .login-page { padding: 6rem 0 3rem; }
+    .login__card { padding: 2rem 1.4rem 1.8rem; }
+}

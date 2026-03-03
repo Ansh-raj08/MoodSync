@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MoodSync — Sign In</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/login.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Animated Background Orbs -->
+    <div class="bg-orbs" aria-hidden="true">
+        <div class="orb orb--1"></div>
+        <div class="orb orb--2"></div>
+        <div class="orb orb--3"></div>
+        <div class="orb orb--4"></div>
+    </div>
+
+    <!-- ========== NAVBAR ========== -->
+    <nav class="navbar">
+        <div class="container navbar__inner">
+            <a href="index.html" class="navbar__logo">
+                <span class="navbar__logo-icon">💜</span>
+                <span class="navbar__logo-text">MoodSync</span>
+            </a>
+            <ul class="navbar__links">
+                <li><a href="index.html#how-it-works">How It Works</a></li>
+                <li><a href="index.html#features">Features</a></li>
+                <li><a href="index.html#privacy">Privacy</a></li>
+            </ul>
+            <a href="setup.html" class="btn btn--sm btn--outline">Get Started</a>
+            <button class="navbar__hamburger" aria-label="Toggle navigation">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ========== MAIN ========== -->
+    <main class="login-page">
+        <div class="container">
+
+            <section class="login">
+                <div class="login__card glass-card">
+
+                    <!-- Brand mark -->
+                    <div class="login__brand">
+                        <span class="login__brand-icon">💜</span>
+                        <span class="login__brand-name">MoodSync</span>
+                    </div>
+
+                    <div class="login__header">
+                        <h1 class="login__title">Welcome back</h1>
+                        <p class="login__subtitle">Sign in to continue your emotional journey.</p>
+                    </div>
+
+                    <!-- Login form -->
+                    <form id="loginForm" class="login__form" novalidate autocomplete="off">
+
+                        <!-- Email / Username -->
+                        <div class="form-group" id="emailGroup">
+                            <label class="form-label" for="loginEmail">Email address</label>
+                            <div class="input-wrap">
+                                <span class="input-icon" aria-hidden="true">✉️</span>
+                                <input
+                                    type="email"
+                                    id="loginEmail"
+                                    class="form-input input-with-icon"
+                                    placeholder="you@example.com"
+                                    autocomplete="email"
+                                    required
+                                >
+                            </div>
+                            <p class="field-error" id="emailError" role="alert" aria-live="polite" hidden></p>
+                        </div>
+
+                        <!-- Password -->
+                        <div class="form-group" id="passwordGroup">
+                            <div class="label-row">
+                                <label class="form-label" for="loginPassword">Password</label>
+                                <button type="button" class="forgot-link" id="forgotBtn">Forgot password?</button>
+                            </div>
+                            <div class="input-wrap">
+                                <span class="input-icon" aria-hidden="true">🔒</span>
+                                <input
+                                    type="password"
+                                    id="loginPassword"
+                                    class="form-input input-with-icon"
+                                    placeholder="Enter your password"
+                                    autocomplete="current-password"
+                                    required
+                                >
+                                <button type="button" class="toggle-password" id="togglePassword" aria-label="Show password">
+                                    <span id="eyeIcon">👁</span>
+                                </button>
+                            </div>
+                            <p class="field-error" id="passwordError" role="alert" aria-live="polite" hidden></p>
+                        </div>
+
+                        <!-- Global error -->
+                        <p class="form-error glass-card" id="formError" role="alert" aria-live="polite" hidden></p>
+
+                        <!-- Submit -->
+                        <button type="submit" class="btn btn--glass btn--lg login__submit" id="loginBtn">
+                            <span class="btn__icon">✨</span>
+                            Sign In
+                        </button>
+
+                        <div class="login__divider">
+                            <span>or</span>
+                        </div>
+
+                        <!-- Sign up CTA -->
+                        <a href="setup.html" class="btn btn--outline btn--lg login__signup">
+                            Create an Account
+                        </a>
+
+                    </form>
+
+                    <p class="login__privacy">🔒 Your data stays only on your device.</p>
+
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- ========== FOOTER ========== -->
+    <footer class="footer">
+        <div class="container footer__inner">
+            <div class="footer__brand">
+                <span class="navbar__logo-icon">💜</span>
+                <span class="navbar__logo-text">MoodSync</span>
+            </div>
+            <p class="footer__copy">&copy; 2026 MoodSync. Made with love for couples who care.</p>
+            <ul class="footer__links">
+                <li><a href="mood.html">Log Mood</a></li>
+                <li><a href="dashboard.html">Dashboard</a></li>
+                <li><a href="setup.html">Setup</a></li>
+            </ul>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script src="js/login.js"></script>
+</body>
+</html>

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MoodSync — Log Your Mood</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/mood.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Animated Background Orbs -->
+    <div class="bg-orbs" aria-hidden="true">
+        <div class="orb orb--1"></div>
+        <div class="orb orb--2"></div>
+        <div class="orb orb--3"></div>
+        <div class="orb orb--4"></div>
+    </div>
+
+    <!-- ========== NAVBAR ========== -->
+    <nav class="navbar">
+        <div class="container navbar__inner">
+            <a href="index.html" class="navbar__logo">
+                <span class="navbar__logo-icon">💜</span>
+                <span class="navbar__logo-text">MoodSync</span>
+            </a>
+            <ul class="navbar__links">
+                <li><a href="mood.html">Log Mood</a></li>
+                <li><a href="dashboard.html">Dashboard</a></li>
+                <li><a href="setup.html">Setup</a></li>
+            </ul>
+            <a href="dashboard.html" class="btn btn--sm btn--outline">Dashboard</a>
+            <button class="navbar__hamburger" aria-label="Toggle navigation">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ========== MAIN ========== -->
+    <main class="mood-page">
+        <div class="container">
+
+            <!-- Already logged today banner (hidden by default) -->
+            <div class="mood-logged-banner glass-card" id="loggedBanner" hidden>
+                <span class="mood-logged-banner__icon" id="loggedEmoji">😊</span>
+                <div class="mood-logged-banner__text">
+                    <p class="mood-logged-banner__title">You've already checked in today</p>
+                    <p class="mood-logged-banner__sub" id="loggedLabel">Feeling good</p>
+                </div>
+                <a href="dashboard.html" class="btn btn--glass btn--sm">View Dashboard</a>
+            </div>
+
+            <!-- Mood log form -->
+            <section class="mood-section" id="moodSection">
+                <div class="mood-card glass-card">
+
+                    <!-- Header -->
+                    <div class="mood-card__header">
+                        <p class="mood-card__date" id="todayDate"></p>
+                        <h1 class="mood-card__title">How are you feeling today?</h1>
+                        <p class="mood-card__sub">Pick the mood that best describes your day so far.</p>
+                    </div>
+
+                    <form id="moodForm" class="mood-form">
+
+                        <!-- Mood picker grid -->
+                        <fieldset class="mood-picker" id="moodPicker">
+                            <legend class="sr-only">Select your mood</legend>
+
+                            <label class="mood-option" title="Awful">
+                                <input type="radio" name="mood" value="1" required>
+                                <span class="mood-option__emoji">😫</span>
+                                <span class="mood-option__label">Awful</span>
+                            </label>
+
+                            <label class="mood-option" title="Bad">
+                                <input type="radio" name="mood" value="2">
+                                <span class="mood-option__emoji">😔</span>
+                                <span class="mood-option__label">Bad</span>
+                            </label>
+
+                            <label class="mood-option" title="Okay">
+                                <input type="radio" name="mood" value="3">
+                                <span class="mood-option__emoji">😐</span>
+                                <span class="mood-option__label">Okay</span>
+                            </label>
+
+                            <label class="mood-option" title="Good">
+                                <input type="radio" name="mood" value="4">
+                                <span class="mood-option__emoji">🙂</span>
+                                <span class="mood-option__label">Good</span>
+                            </label>
+
+                            <label class="mood-option" title="Great">
+                                <input type="radio" name="mood" value="5">
+                                <span class="mood-option__emoji">😄</span>
+                                <span class="mood-option__label">Great</span>
+                            </label>
+
+                            <label class="mood-option" title="Amazing">
+                                <input type="radio" name="mood" value="6">
+                                <span class="mood-option__emoji">🥰</span>
+                                <span class="mood-option__label">Amazing</span>
+                            </label>
+
+                        </fieldset>
+
+                        <!-- Optional note -->
+                        <div class="mood-note">
+                            <label class="mood-note__label" for="moodNote">Add a note <span class="mood-note__optional">(optional)</span></label>
+                            <textarea
+                                id="moodNote"
+                                class="mood-note__input form-input"
+                                rows="3"
+                                placeholder="What's on your mind today?"
+                                maxlength="280"
+                            ></textarea>
+                            <p class="mood-note__count"><span id="charCount">0</span> / 280</p>
+                        </div>
+
+                        <!-- Submit -->
+                        <button type="submit" class="btn btn--glass btn--lg mood-submit" id="submitBtn">
+                            <span class="btn__icon">✨</span>
+                            Save Today's Mood
+                        </button>
+
+                        <p class="mood-privacy">🔒 Your data stays only on your device.</p>
+
+                    </form>
+                </div>
+            </section>
+
+            <!-- Success state (hidden by default) -->
+            <section class="mood-success glass-card" id="moodSuccess" hidden>
+                <div class="mood-success__emoji" id="successEmoji">😊</div>
+                <h2 class="mood-success__title">Mood saved!</h2>
+                <p class="mood-success__text" id="successText">You're feeling good today.</p>
+                <div class="mood-success__actions">
+                    <a href="dashboard.html" class="btn btn--glass btn--lg">
+                        <span class="btn__icon">📊</span>
+                        See Dashboard
+                    </a>
+                    <a href="index.html" class="btn btn--ghost btn--lg">Back to Home</a>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- ========== FOOTER ========== -->
+    <footer class="footer">
+        <div class="container footer__inner">
+            <div class="footer__brand">
+                <span class="navbar__logo-icon">💜</span>
+                <span class="navbar__logo-text">MoodSync</span>
+            </div>
+            <p class="footer__copy">&copy; 2026 MoodSync. Made with love for couples who care.</p>
+            <ul class="footer__links">
+                <li><a href="mood.html">Log Mood</a></li>
+                <li><a href="dashboard.html">Dashboard</a></li>
+                <li><a href="setup.html">Setup</a></li>
+            </ul>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script src="js/mood.js"></script>
+</body>
+</html>
