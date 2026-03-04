@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MoodSync — Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Animated Background Orbs -->
+    <div class="bg-orbs" aria-hidden="true">
+        <div class="orb orb--1"></div>
+        <div class="orb orb--2"></div>
+        <div class="orb orb--3"></div>
+        <div class="orb orb--4"></div>
+    </div>
+
+    <!-- ========== NAVBAR ========== -->
+    <nav class="navbar">
+        <div class="container navbar__inner">
+            <a href="index.html" class="navbar__logo">
+                <span class="navbar__logo-icon">💜</span>
+                <span class="navbar__logo-text">MoodSync</span>
+            </a>
+            <ul class="navbar__links">
+                <li><a href="mood.html">Log Mood</a></li>
+                <li><a href="dashboard.html" class="nav-active">Dashboard</a></li>
+                <li><a href="setup.html">Setup</a></li>
+            </ul>
+            <a href="mood.html" class="btn btn--sm btn--glass">Log Today</a>
+            <button class="navbar__hamburger" aria-label="Toggle navigation">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ========== MAIN ========== -->
+    <main class="dash-page">
+        <div class="container">
+
+            <!-- Page header -->
+            <header class="dash-header">
+                <div class="dash-header__text">
+                    <p class="dash-header__label">Your Relationship</p>
+                    <h1 class="dash-header__title" id="coupleTitle">Dashboard</h1>
+                    <p class="dash-header__sub" id="coupleSince"></p>
+                </div>
+                <a href="mood.html" class="btn btn--glass btn--lg dash-header__cta">
+                    <span class="btn__icon">✨</span>
+                    Log Today's Mood
+                </a>
+            </header>
+
+            <!-- ====== No-data state ====== -->
+            <section class="dash-empty glass-card" id="dashEmpty" hidden>
+                <span class="dash-empty__icon">📊</span>
+                <h2 class="dash-empty__title">No mood logs yet</h2>
+                <p class="dash-empty__text">Start logging your daily mood to see relationship insights here.</p>
+                <a href="mood.html" class="btn btn--glass btn--lg">
+                    <span class="btn__icon">✨</span>
+                    Log Your First Mood
+                </a>
+            </section>
+
+            <!-- ====== Dashboard grid ====== -->
+            <div class="dash-grid" id="dashGrid">
+
+                <!-- 1. Health Score Card -->
+                <article class="dash-card dash-card--score glass-card" id="scoreCard">
+                    <div class="dash-card__badge">Relationship Health</div>
+                    <div class="score-ring" id="scoreRing">
+                        <svg class="score-ring__svg" viewBox="0 0 120 120" aria-hidden="true">
+                            <circle class="score-ring__track" cx="60" cy="60" r="50"/>
+                            <circle class="score-ring__fill" id="scoreCircle" cx="60" cy="60" r="50"
+                                    stroke-dasharray="314"
+                                    stroke-dashoffset="314"/>
+                        </svg>
+                        <div class="score-ring__inner">
+                            <span class="score-ring__number" id="scoreNumber">—</span>
+                            <span class="score-ring__outof">/ 100</span>
+                        </div>
+                    </div>
+                    <p class="dash-card__desc" id="scoreDesc">Logging data…</p>
+                </article>
+
+                <!-- 2. Mood Trend Card -->
+                <article class="dash-card glass-card" id="trendCard">
+                    <div class="dash-card__badge">7-Day Trend</div>
+                    <div class="trend-display">
+                        <span class="trend-display__icon" id="trendIcon">⏳</span>
+                        <span class="trend-display__label" id="trendLabel">Loading…</span>
+                    </div>
+                    <p class="dash-card__desc" id="trendDesc">Analysing your recent mood data.</p>
+                    <div class="trend-bar-row" id="trendBars" aria-label="7-day mood bar chart">
+                        <!-- Bars injected by dashboard.js -->
+                    </div>
+                </article>
+
+                <!-- 3. Confidence Card -->
+                <article class="dash-card glass-card" id="confidenceCard">
+                    <div class="dash-card__badge">Prediction Confidence</div>
+                    <div class="conf-display">
+                        <span class="conf-display__number" id="confNumber">—</span>
+                        <span class="conf-display__pct">%</span>
+                    </div>
+                    <div class="conf-bar">
+                        <div class="conf-bar__fill" id="confBarFill" style="width: 0%"></div>
+                    </div>
+                    <p class="dash-card__desc" id="confDesc">Log more days to improve confidence.</p>
+                </article>
+
+                <!-- 4. Average Mood Card -->
+                <article class="dash-card glass-card" id="avgCard">
+                    <div class="dash-card__badge">Average Mood</div>
+                    <div class="avg-display">
+                        <span class="avg-display__emoji" id="avgEmoji">—</span>
+                        <span class="avg-display__label" id="avgLabel">—</span>
+                    </div>
+                    <p class="dash-card__desc" id="avgDesc">Based on all your logged days.</p>
+                </article>
+
+                <!-- 5. Recent Logs Card (full-width) -->
+                <article class="dash-card dash-card--logs glass-card" id="logsCard">
+                    <div class="dash-card__badge">Recent Entries</div>
+                    <h2 class="dash-card__title">Last 5 Mood Logs</h2>
+                    <ul class="log-list" id="logList">
+                        <!-- Entries injected by dashboard.js -->
+                    </ul>
+                </article>
+
+            </div>
+            <!-- /dash-grid -->
+
+        </div>
+    </main>
+
+    <!-- ========== FOOTER ========== -->
+    <footer class="footer">
+        <div class="container footer__inner">
+            <div class="footer__brand">
+                <span class="navbar__logo-icon">💜</span>
+                <span class="navbar__logo-text">MoodSync</span>
+            </div>
+            <p class="footer__copy">&copy; 2026 MoodSync. Made with love for couples who care.</p>
+            <ul class="footer__links">
+                <li><a href="mood.html">Log Mood</a></li>
+                <li><a href="dashboard.html">Dashboard</a></li>
+                <li><a href="setup.html">Setup</a></li>
+            </ul>
+        </div>
+    </footer>
+
+    <script src="js/guard.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/algorithm.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+</html>

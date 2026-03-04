@@ -1,5 +1,95 @@
 /* ============================================================
    MoodSync — iOS 26 Liquid Glass Design System
+   ============================================================
+
+   SECTIONS IN THIS FILE
+   ─────────────────────
+   1. CSS Custom Properties
+   2. Resets & Base
+   3. Keyframes
+   4. Layout helpers
+   5. Components (Navbar, Buttons, Cards…)
+   6. Form System  ← shared across setup / mood / login pages
+   7. Page sections (Landing)
+   8. Footer
+   ============================================================ */
+
+/* ---- [6] Form System — shared validation states ---- */
+
+/* Required asterisk */
+.form-required {
+    color: var(--clr-rose);
+    margin-left: 2px;
+    font-size: 0.85em;
+}
+
+/* Optional badge */
+.form-optional {
+    color: var(--clr-text-secondary);
+    font-size: 0.8em;
+    font-weight: 400;
+    margin-left: 6px;
+    font-style: italic;
+}
+
+/* Error message below field */
+.form-error {
+    display: block;
+    min-height: 18px;
+    font-size: 0.78rem;
+    color: var(--clr-rose);
+    margin-top: 5px;
+    padding-left: 2px;
+    transition: opacity 0.2s var(--ease-smooth);
+}
+
+.form-error:empty {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Error state on the input */
+.form-input--error {
+    border-color: var(--clr-rose) !important;
+    box-shadow: 0 0 0 3px rgba(242, 122, 150, 0.18),
+                inset 0 1px 0 rgba(242, 122, 150, 0.12) !important;
+}
+
+.form-input--error:focus {
+    border-color: var(--clr-rose) !important;
+    box-shadow: 0 0 0 4px rgba(242, 122, 150, 0.25),
+                inset 0 1px 0 rgba(242, 122, 150, 0.15) !important;
+}
+
+/* Group error class (can animate label, etc.) */
+.form-group--error .form-label {
+    color: var(--clr-rose);
+    transition: color 0.2s var(--ease-smooth);
+}
+
+/* Loading state on submit button */
+.btn--loading {
+    opacity: 0.7;
+    cursor: wait;
+    pointer-events: none;
+}
+
+/* Remove default ← back arrow from date inputs on webkit */
+input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(0.6) sepia(1) hue-rotate(260deg);
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+}
+
+/* Original file below
+   ============================================================ */
+
+/*
    Apple-inspired translucent glass · Specular highlights
    Refractive shine · Luminous depth · Dynamic tinting
    ============================================================ */

@@ -1,0 +1,460 @@
+/* =============================================================
+   dashboard.css — MoodSync Analytics Dashboard
+   Inherits design tokens from css/style.css
+   ============================================================= */
+
+/* ---- Page shell ---- */
+
+.dash-page {
+    min-height: 100vh;
+    padding-top: 100px;
+    padding-bottom: 80px;
+    background: var(--gradient-bg);
+    font-family: var(--font-sans);
+    color: var(--clr-text-primary);
+}
+
+/* ---- Header row ---- */
+
+.dash-header {
+    text-align: center;
+    margin-bottom: 48px;
+    padding: 0 24px;
+}
+
+.dash-header__title {
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg,
+        var(--clr-pink)    0%,
+        var(--clr-lavender) 40%,
+        var(--clr-indigo)  80%,
+        var(--clr-pink)    100%);
+    background-size: 300% 300%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: gradientFlow 8s ease infinite;
+    margin-bottom: 8px;
+}
+
+.dash-header__sub {
+    font-size: 0.95rem;
+    color: var(--clr-text-secondary);
+    margin: 0;
+}
+
+/* ---- Empty state ---- */
+
+.dash-empty {
+    max-width: 480px;
+    margin: 60px auto 0;
+    text-align: center;
+    border-radius: 24px;
+    padding: 56px 40px;
+}
+
+.dash-empty__icon {
+    font-size: 3rem;
+    margin-bottom: 20px;
+    display: block;
+}
+
+.dash-empty__title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: var(--clr-text-primary);
+}
+
+.dash-empty__text {
+    font-size: 0.9rem;
+    color: var(--clr-text-secondary);
+    margin-bottom: 28px;
+    line-height: 1.6;
+}
+
+/* ---- Grid ---- */
+
+.dash-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+/* ---- Base card ---- */
+
+.dash-card {
+    border-radius: 28px;
+    padding: 32px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-height: 240px;
+    position: relative;
+    overflow: hidden;
+}
+
+.dash-card__badge {
+    display: inline-block;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: var(--clr-text-secondary);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    width: fit-content;
+    margin-bottom: 4px;
+}
+
+/* ---- Health Score card ---- */
+
+.dash-card--score {
+    grid-column: 1;
+    align-items: center;
+    text-align: center;
+}
+
+/* SVG ring wrapper */
+.score-ring-wrap {
+    position: relative;
+    width: 140px;
+    height: 140px;
+    flex-shrink: 0;
+}
+
+.score-ring {
+    width: 140px;
+    height: 140px;
+    transform: rotate(-90deg);
+    overflow: visible;
+}
+
+.score-ring__track {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.10);
+    stroke-width: 10;
+    stroke-linecap: round;
+}
+
+.score-ring__fill {
+    fill: none;
+    stroke: var(--clr-lavender);
+    stroke-width: 10;
+    stroke-linecap: round;
+    stroke-dasharray: 314;
+    stroke-dashoffset: 314;
+    /* dashoffset + color set by JS */
+}
+
+.score-ring__number {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+
+.score-ring__num {
+    font-size: 2.4rem;
+    font-weight: 800;
+    line-height: 1;
+    background: linear-gradient(135deg, var(--clr-pink), var(--clr-lavender));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.score-ring__label {
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--clr-text-secondary);
+    margin-top: 2px;
+}
+
+.score-desc {
+    font-size: 0.85rem;
+    color: var(--clr-text-secondary);
+    line-height: 1.5;
+    text-align: center;
+    max-width: 200px;
+}
+
+/* ---- Trend card ---- */
+
+.dash-card--trend {
+    grid-column: 2;
+}
+
+.trend-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.trend-icon {
+    font-size: 2rem;
+    line-height: 1;
+}
+
+.trend-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.trend-label {
+    font-size: 1.2rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.trend-desc {
+    font-size: 0.8rem;
+    color: var(--clr-text-secondary);
+    line-height: 1.4;
+}
+
+/* 7-bar mini chart */
+
+.trend-bar-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    height: 72px;
+    margin-top: auto;
+    padding-top: 12px;
+}
+
+.trend-bar {
+    flex: 1;
+    height: 100%;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.07);
+    display: flex;
+    align-items: flex-end;
+    overflow: hidden;
+    cursor: default;
+}
+
+.trend-bar--empty {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.trend-bar__fill {
+    width: 100%;
+    border-radius: 6px;
+    min-height: 4px;
+    transition: height 0.8s cubic-bezier(0.25, 0.1, 0.25, 1);
+    opacity: 0.85;
+}
+
+/* ---- Confidence card ---- */
+
+.dash-card--confidence {
+    grid-column: 1;
+}
+
+.conf-score-row {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+}
+
+.conf-number {
+    font-size: 3rem;
+    font-weight: 800;
+    line-height: 1;
+    background: linear-gradient(135deg, var(--clr-lavender), var(--clr-indigo));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.conf-unit {
+    font-size: 1rem;
+    color: var(--clr-text-secondary);
+    font-weight: 500;
+}
+
+.conf-bar {
+    height: 10px;
+    border-radius: 100px;
+    background: rgba(255, 255, 255, 0.10);
+    overflow: hidden;
+    margin-top: 4px;
+}
+
+.conf-bar__fill {
+    height: 100%;
+    border-radius: 100px;
+    width: 0%;
+    background: var(--clr-lavender);
+    /* width + color set by JS */
+}
+
+.conf-desc {
+    font-size: 0.82rem;
+    color: var(--clr-text-secondary);
+    line-height: 1.5;
+}
+
+/* ---- Average Mood card ---- */
+
+.dash-card--average {
+    grid-column: 2;
+    align-items: center;
+    text-align: center;
+    justify-content: center;
+}
+
+.avg-emoji {
+    font-size: 3.6rem;
+    line-height: 1;
+    filter: drop-shadow(0 4px 16px rgba(200, 140, 245, 0.35));
+}
+
+.avg-label {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-top: 6px;
+}
+
+.avg-desc {
+    font-size: 0.82rem;
+    color: var(--clr-text-secondary);
+    line-height: 1.5;
+}
+
+/* ---- Recent Logs card (full width) ---- */
+
+.dash-card--logs {
+    grid-column: 1 / -1;
+    min-height: unset;
+}
+
+.dash-card__title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--clr-text-primary);
+    margin: 0 0 4px;
+}
+
+/* Log list */
+
+.log-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.log-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 14px 18px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    transition: background 0.2s;
+}
+
+.log-item:hover {
+    background: rgba(255, 255, 255, 0.09);
+}
+
+.log-item--empty {
+    color: var(--clr-text-secondary);
+    font-size: 0.9rem;
+    justify-content: center;
+    border: none;
+    background: transparent;
+}
+
+.log-item__emoji {
+    font-size: 1.6rem;
+    flex-shrink: 0;
+    line-height: 1;
+    margin-top: 1px;
+}
+
+.log-item__body {
+    flex: 1;
+    min-width: 0;
+}
+
+.log-item__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 4px;
+}
+
+.log-item__date {
+    font-size: 0.8rem;
+    color: var(--clr-text-secondary);
+}
+
+.log-item__mood {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.log-item__note {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--clr-text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    line-height: 1.4;
+}
+
+/* ---- Responsive ---- */
+
+@media (max-width: 700px) {
+    .dash-grid {
+        grid-template-columns: 1fr;
+        padding: 0 16px;
+        gap: 18px;
+    }
+
+    .dash-card--score,
+    .dash-card--trend,
+    .dash-card--confidence,
+    .dash-card--average,
+    .dash-card--logs {
+        grid-column: 1;
+    }
+
+    .dash-card {
+        padding: 24px 20px;
+        min-height: unset;
+    }
+}
+
+@media (max-width: 400px) {
+    .dash-header__title { font-size: 1.5rem; }
+    .score-ring-wrap { width: 120px; height: 120px; }
+    .score-ring { width: 120px; height: 120px; }
+}
