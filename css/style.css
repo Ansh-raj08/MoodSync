@@ -74,6 +74,15 @@
     pointer-events: none;
 }
 
+/* Disabled state — visually greyed out, non-interactive */
+.btn--disabled {
+    opacity: 0.38;
+    cursor: not-allowed;
+    pointer-events: none;
+    filter: grayscale(0.4);
+    user-select: none;
+}
+
 /* Remove default ← back arrow from date inputs on webkit */
 input[type="date"]::-webkit-calendar-picker-indicator {
     filter: invert(0.6) sepia(1) hue-rotate(260deg);

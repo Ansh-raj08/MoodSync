@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MoodSync — Sign In</title>
+    <title>MoodSync — Create Account</title>
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/login.css">
+    <link rel="stylesheet" href="css/create-account.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -32,7 +32,7 @@
                 <li><a href="index.html#features">Features</a></li>
                 <li><a href="index.html#privacy">Privacy</a></li>
             </ul>
-            <a href="setup.html" class="btn btn--sm btn--outline">Get Started</a>
+            <a href="login.html" class="btn btn--sm btn--outline">Sign In</a>
             <button class="navbar__hamburger" aria-label="Toggle navigation">
                 <span></span><span></span><span></span>
             </button>
@@ -40,38 +40,53 @@
     </nav>
 
     <!-- ========== MAIN ========== -->
-    <main class="login-page">
+    <main class="signup-page">
         <div class="container">
-
-            <section class="login">
-                <div class="login__card glass-card">
+            <section class="signup">
+                <div class="signup__card glass-card">
 
                     <!-- Brand mark -->
-                    <div class="login__brand">
-                        <span class="login__brand-icon">💜</span>
-                        <span class="login__brand-name">MoodSync</span>
+                    <div class="signup__brand">
+                        <span class="signup__brand-icon">💜</span>
+                        <span class="signup__brand-name">MoodSync</span>
                     </div>
 
-                    <div class="login__header">
-                        <h1 class="login__title">Welcome back</h1>
-                        <p class="login__subtitle">Sign in to continue your emotional journey.</p>
+                    <div class="signup__header">
+                        <h1 class="signup__title">Create Your Account</h1>
+                        <p class="signup__subtitle">Start your emotional wellness journey today.</p>
                     </div>
 
-                    <!-- Login form -->
-                    <form id="loginForm" class="login__form" novalidate autocomplete="off">
+                    <!-- Signup form -->
+                    <form id="signupForm" class="signup__form" novalidate autocomplete="off">
 
-                        <!-- Email / Username -->
+                        <!-- Name -->
+                        <div class="form-group" id="nameGroup">
+                            <label class="form-label" for="signupName">Your Name</label>
+                            <div class="input-wrap">
+                                <span class="input-icon" aria-hidden="true">👤</span>
+                                <input
+                                    type="text"
+                                    id="signupName"
+                                    class="form-input input-with-icon"
+                                    placeholder="e.g. Ansh"
+                                    autocomplete="given-name"
+                                    maxlength="50"
+                                >
+                            </div>
+                            <p class="field-error" id="nameError" role="alert" aria-live="polite" hidden></p>
+                        </div>
+
+                        <!-- Email -->
                         <div class="form-group" id="emailGroup">
-                            <label class="form-label" for="loginEmail">Email address</label>
+                            <label class="form-label" for="signupEmail">Email Address</label>
                             <div class="input-wrap">
                                 <span class="input-icon" aria-hidden="true">✉️</span>
                                 <input
                                     type="email"
-                                    id="loginEmail"
+                                    id="signupEmail"
                                     class="form-input input-with-icon"
                                     placeholder="you@example.com"
                                     autocomplete="email"
-                                    required
                                 >
                             </div>
                             <p class="field-error" id="emailError" role="alert" aria-live="polite" hidden></p>
@@ -79,19 +94,15 @@
 
                         <!-- Password -->
                         <div class="form-group" id="passwordGroup">
-                            <div class="label-row">
-                                <label class="form-label" for="loginPassword">Password</label>
-                                <button type="button" class="forgot-link" id="forgotBtn">Forgot password?</button>
-                            </div>
+                            <label class="form-label" for="signupPassword">Password</label>
                             <div class="input-wrap">
                                 <span class="input-icon" aria-hidden="true">🔒</span>
                                 <input
                                     type="password"
-                                    id="loginPassword"
-                                    class="form-input input-with-icon"
-                                    placeholder="Enter your password"
-                                    autocomplete="current-password"
-                                    required
+                                    id="signupPassword"
+                                    class="form-input input-with-icon input-with-toggle"
+                                    placeholder="Minimum 6 characters"
+                                    autocomplete="new-password"
                                 >
                                 <button type="button" class="toggle-password" id="togglePassword" aria-label="Show password">
                                     <span id="eyeIcon">👁</span>
@@ -100,31 +111,27 @@
                             <p class="field-error" id="passwordError" role="alert" aria-live="polite" hidden></p>
                         </div>
 
-                        <!-- Global error -->
-                        <p class="form-error glass-card" id="formError" role="alert" aria-live="polite" hidden></p>
+                        <!-- Global error banner -->
+                        <p class="form-error-banner glass-card" id="formError" role="alert" aria-live="polite" hidden></p>
 
                         <!-- Submit -->
-                        <button type="submit" class="btn btn--glass btn--lg login__submit" id="loginBtn">
+                        <button type="submit" class="btn btn--glass btn--lg signup__submit" id="signupBtn">
                             <span class="btn__icon">✨</span>
-                            Sign In
+                            Create Account
                         </button>
 
-                        <div class="login__divider">
-                            <span>or</span>
-                        </div>
-
-                        <!-- Sign up CTA -->
-                        <a href="create-account.html" class="btn btn--outline btn--lg login__signup">
-                            Create an Account
-                        </a>
+                        <!-- Already have account -->
+                        <p class="signup__login-cta">
+                            Already have an account?
+                            <a href="login.html" class="signup__login-link">Log in</a>
+                        </p>
 
                     </form>
 
-                    <p class="login__privacy">🔒 Your data stays only on your device.</p>
+                    <p class="signup__privacy">🔒 Your data stays only on your device.</p>
 
                 </div>
             </section>
-
         </div>
     </main>
 
@@ -145,6 +152,6 @@
     </footer>
 
     <script src="js/main.js"></script>
-    <script src="js/login.js"></script>
+    <script src="js/create-account.js"></script>
 </body>
 </html>

@@ -199,10 +199,4 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // ---- Auto-redirect if already logged in ----
-
-    if (localStorage.getItem("moodSync_loggedIn") === "true") {
-        redirectAfterLogin();
-    }
-
 });
