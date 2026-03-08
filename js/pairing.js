@@ -265,7 +265,7 @@ async function _initPairPage(user) {
     if (form) {
         form.addEventListener("submit", async (e) => {
             e.preventDefault();
-            const code = input.value.trim();
+            const code = input.value.trim().toLowerCase();
             if (!code) { _pairMsg(msgEl, "Enter a pair code.", "error"); return; }
 
             submitBtn.disabled   = true;
