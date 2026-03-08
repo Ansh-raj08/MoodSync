@@ -1492,7 +1492,6 @@ ul  { list-style: none; }
     flex: 1;
     font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace;
     letter-spacing: 0.1em;
-    text-transform: uppercase;
 }
 
 /* ---- Pair Message (success / error feedback) ---- */
