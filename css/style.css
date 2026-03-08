@@ -61,6 +61,71 @@
                 inset 0 1px 0 rgba(242, 122, 150, 0.15) !important;
 }
 
+/* ============================================================
+   CUSTOM CARET — color-cycling blink for all text inputs
+   ============================================================ */
+
+/* Color cycle: red → green → pink → blue → yellow → repeat
+   Each color holds for ~0.55s then blinks off for ~0.45s.
+   Total duration 5s → one full cycle per ~1s per colour.       */
+@keyframes caretColorCycle {
+  /* ── Red ── */
+  0%   { caret-color: rgba(255, 75,  75,  1); }
+  9%   { caret-color: rgba(255, 75,  75,  1); }
+  10%  { caret-color: rgba(255, 75,  75,  0); }
+  19%  { caret-color: rgba(50,  210, 100, 0); }
+  /* ── Green ── */
+  20%  { caret-color: rgba(50,  210, 100, 1); }
+  29%  { caret-color: rgba(50,  210, 100, 1); }
+  30%  { caret-color: rgba(50,  210, 100, 0); }
+  39%  { caret-color: rgba(255, 105, 180, 0); }
+  /* ── Pink ── */
+  40%  { caret-color: rgba(255, 105, 180, 1); }
+  49%  { caret-color: rgba(255, 105, 180, 1); }
+  50%  { caret-color: rgba(255, 105, 180, 0); }
+  59%  { caret-color: rgba(75,  155, 255, 0); }
+  /* ── Blue ── */
+  60%  { caret-color: rgba(75,  155, 255, 1); }
+  69%  { caret-color: rgba(75,  155, 255, 1); }
+  70%  { caret-color: rgba(75,  155, 255, 0); }
+  79%  { caret-color: rgba(255, 210,  50, 0); }
+  /* ── Yellow ── */
+  80%  { caret-color: rgba(255, 210,  50, 1); }
+  89%  { caret-color: rgba(255, 210,  50, 1); }
+  90%  { caret-color: rgba(255, 210,  50, 0); }
+  99%  { caret-color: rgba(255, 75,   75, 0); }
+  100% { caret-color: rgba(255, 75,   75, 1); }
+}
+
+/* Matching glow on the input border, synced to caret color */
+@keyframes caretGlow {
+  0%,   9%   { box-shadow: 0 2px 6px rgba(0,0,0,.05), 0 0 0 3px rgba(255, 75,  75,  .18), 0 0 18px rgba(255, 75,  75,  .18), inset 0 1px 0 rgba(255,255,255,.08); }
+  10%,  19%  { box-shadow: 0 2px 6px rgba(0,0,0,.05), 0 0 0 3px rgba(255, 75,  75,  .08), 0 0  6px rgba(255, 75,  75,  .06), inset 0 1px 0 rgba(255,255,255,.08); }
+  20%,  29%  { box-shadow: 0 2px 6px rgba(0,0,0,.05), 0 0 0 3px rgba(50,  210, 100, .18), 0 0 18px rgba(50,  210, 100, .18), inset 0 1px 0 rgba(255,255,255,.08); }
+  30%,  39%  { box-shadow: 0 2px 6px rgba(0,0,0,.05), 0 0 0 3px rgba(50,  210, 100, .08), 0 0  6px rgba(50,  210, 100, .06), inset 0 1px 0 rgba(255,255,255,.08); }
+  40%,  49%  { box-shadow: 0 2px 6px rgba(0,0,0,.05), 0 0 0 3px rgba(255, 105, 180, .18), 0 0 18px rgba(255, 105, 180, .18), inset 0 1px 0 rgba(255,255,255,.08); }
+  50%,  59%  { box-shadow: 0 2px 6px rgba(0,0,0,.05), 0 0 0 3px rgba(255, 105, 180, .08), 0 0  6px rgba(255, 105, 180, .06), inset 0 1px 0 rgba(255,255,255,.08); }
+  60%,  69%  { box-shadow: 0 2px 6px rgba(0,0,0,.05), 0 0 0 3px rgba(75,  155, 255, .18), 0 0 18px rgba(75,  155, 255, .18), inset 0 1px 0 rgba(255,255,255,.08); }
+  70%,  79%  { box-shadow: 0 2px 6px rgba(0,0,0,.05), 0 0 0 3px rgba(75,  155, 255, .08), 0 0  6px rgba(75,  155, 255, .06), inset 0 1px 0 rgba(255,255,255,.08); }
+  80%,  89%  { box-shadow: 0 2px 6px rgba(0,0,0,.05), 0 0 0 3px rgba(255, 210,  50, .18), 0 0 18px rgba(255, 210,  50, .18), inset 0 1px 0 rgba(255,255,255,.08); }
+  90%,  99%  { box-shadow: 0 2px 6px rgba(0,0,0,.05), 0 0 0 3px rgba(255, 210,  50, .08), 0 0  6px rgba(255, 210,  50, .06), inset 0 1px 0 rgba(255,255,255,.08); }
+  100%       { box-shadow: 0 2px 6px rgba(0,0,0,.05), 0 0 0 3px rgba(255, 75,  75,  .18), 0 0 18px rgba(255, 75,  75,  .18), inset 0 1px 0 rgba(255,255,255,.08); }
+}
+
+/* Apply caret + glow animations to every focused text-like input.
+   - caretColorCycle replaces the native browser blink.
+   - caretGlow syncs a soft ring+bloom to the active caret colour.
+   - animation-fill-mode: both keeps the first frame visible instantly.  */
+input:focus,
+textarea:focus {
+    animation:
+        caretColorCycle 5s linear infinite,
+        caretGlow       5s linear infinite;
+    animation-fill-mode: both;
+    /* Suppress the native blink so our animation fully controls it */
+    caret-color: auto;
+}
+
 /* Group error class (can animate label, etc.) */
 .form-group--error .form-label {
     color: var(--clr-rose);
@@ -1313,5 +1378,254 @@ ul  { list-style: none; }
     .btn--lg {
         padding: 0.85rem 1.6rem;
         font-size: 0.92rem;
+    }
+}
+
+/* =============================================================
+   PAIR PAGE
+   ============================================================= */
+
+.pair-page {
+    padding-top: 7rem;
+    padding-bottom: 4rem;
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+}
+
+.pair-card {
+    width: 100%;
+    max-width: 520px;
+    padding: 2.5rem 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.pair-card__header {
+    text-align: center;
+}
+
+.pair-card__icon {
+    font-size: 2.8rem;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.pair-card__title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 0.25rem;
+}
+
+.pair-card__sub {
+    font-size: 0.92rem;
+    color: rgba(255, 255, 255, 0.55);
+}
+
+/* ---- Pair Code Box ---- */
+.pair-code-box {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 1rem;
+    padding: 1.25rem 1.5rem;
+    text-align: center;
+}
+
+.pair-code-box__label {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(255, 255, 255, 0.5);
+    margin-bottom: 0.6rem;
+}
+
+.pair-code-box__row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+}
+
+.pair-code-box__code {
+    font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace;
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: #fff;
+    user-select: all;
+}
+
+.pair-code-box__copy {
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 0.6rem;
+    padding: 0.4rem 0.75rem;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+
+.pair-code-box__copy:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+}
+
+/* ---- Pair Form ---- */
+.pair-form__label {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.pair-form__row {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.pair-form__row .form-input {
+    flex: 1;
+    font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+/* ---- Pair Message (success / error feedback) ---- */
+.pair-message {
+    padding: 0.75rem 1rem;
+    border-radius: 0.75rem;
+    font-size: 0.88rem;
+    font-weight: 500;
+    text-align: center;
+}
+
+.pair-message--success {
+    background: rgba(52, 199, 89, 0.15);
+    color: #34c759;
+    border: 1px solid rgba(52, 199, 89, 0.2);
+}
+
+.pair-message--error {
+    background: rgba(255, 69, 58, 0.15);
+    color: #ff453a;
+    border: 1px solid rgba(255, 69, 58, 0.2);
+}
+
+/* ---- Pair Requests ---- */
+.pair-section { }
+
+.pair-section__heading {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 0.75rem;
+}
+
+.pair-request {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.85rem;
+    padding: 1rem 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.pair-request__info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.pair-request__name {
+    font-weight: 600;
+    color: #fff;
+    font-size: 0.95rem;
+}
+
+.pair-request__email {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.45);
+}
+
+.pair-request__actions {
+    display: flex;
+    gap: 0.4rem;
+}
+
+.pair-request--sent {
+    opacity: 0.7;
+}
+
+.pair-request--sent .pair-request__status {
+    font-size: 0.82rem;
+    color: rgba(255, 255, 255, 0.55);
+    font-style: italic;
+}
+
+.pair-empty {
+    text-align: center;
+    font-size: 0.88rem;
+    color: rgba(255, 255, 255, 0.4);
+    padding: 0.75rem 0;
+}
+
+.pair-privacy {
+    text-align: center;
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.35);
+    line-height: 1.5;
+}
+
+/* ---- Dashboard: Partner badge on combined log list ---- */
+.log-item__partner {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.5);
+    margin-left: 0.5rem;
+}
+
+.log-item__partner--you {
+    color: rgba(163, 130, 255, 0.7);
+}
+
+.log-item__partner--them {
+    color: rgba(255, 149, 0, 0.7);
+}
+
+/* ---- Pair page responsive ---- */
+@media (max-width: 480px) {
+    .pair-card {
+        padding: 2rem 1.25rem;
+    }
+
+    .pair-code-box__code {
+        font-size: 1.3rem;
+    }
+
+    .pair-form__row {
+        flex-direction: column;
+    }
+
+    .pair-request {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .pair-request__actions {
+        width: 100%;
+    }
+
+    .pair-request__actions .btn {
+        flex: 1;
     }
 }

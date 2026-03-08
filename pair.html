@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MoodSync — Pair With Your Partner</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/setup.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Animated Background Orbs -->
+    <div class="bg-orbs" aria-hidden="true">
+        <div class="orb orb--1"></div>
+        <div class="orb orb--2"></div>
+        <div class="orb orb--3"></div>
+        <div class="orb orb--4"></div>
+    </div>
+
+    <!-- ========== NAVBAR ========== -->
+    <nav class="navbar">
+        <div class="container navbar__inner">
+            <a href="index.html" class="navbar__logo">
+                <span class="navbar__logo-icon">💜</span>
+                <span class="navbar__logo-text">MoodSync</span>
+            </a>
+            <ul class="navbar__links">
+                <li><a href="index.html">Home</a></li>
+            </ul>
+            <button class="btn btn--sm btn--ghost" id="logoutBtn">Log Out</button>
+            <button class="navbar__hamburger" aria-label="Toggle navigation">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ========== MAIN ========== -->
+    <main class="pair-page">
+        <div class="container">
+            <section class="pair-section">
+                <div class="pair-card glass-card">
+                    <div class="pair-card__header">
+                        <span class="pair-card__icon">🔗</span>
+                        <h1 class="pair-card__title">Pair With Your Partner</h1>
+                        <p class="pair-card__sub">Connect your accounts to start syncing moods together.</p>
+                    </div>
+
+                    <!-- YOUR PAIR CODE -->
+                    <div class="pair-code-box glass-card">
+                        <p class="pair-code-box__label">Your Pair Code</p>
+                        <div class="pair-code-box__row">
+                            <span class="pair-code-box__code" id="myPairCode">--------</span>
+                            <button class="btn btn--glass btn--sm" id="copyCodeBtn">Copy</button>
+                        </div>
+                        <p class="pair-code-box__hint">Share this code with your partner so they can send you a request.</p>
+                    </div>
+
+                    <!-- ENTER PARTNER CODE -->
+                    <form id="pairForm" class="pair-form">
+                        <label class="form-label" for="pairCodeInput">Enter Partner's Code</label>
+                        <div class="pair-form__row">
+                            <input type="text" id="pairCodeInput" class="form-input" placeholder="e.g. a1b2c3d4"
+                                   maxlength="20" autocomplete="off" spellcheck="false">
+                            <button type="submit" class="btn btn--glass btn--lg" id="pairSubmitBtn">
+                                Send Request
+                            </button>
+                        </div>
+                        <p class="pair-message" id="pairMessage" hidden></p>
+                    </form>
+
+                    <!-- INCOMING REQUESTS -->
+                    <div class="pair-requests">
+                        <h2 class="pair-requests__heading">Incoming Requests</h2>
+                        <div id="incomingRequests">
+                            <p class="pair-empty">Checking…</p>
+                        </div>
+                    </div>
+
+                    <!-- OUTGOING REQUESTS -->
+                    <div class="pair-requests">
+                        <h2 class="pair-requests__heading">Sent Requests</h2>
+                        <div id="outgoingRequests">
+                            <p class="pair-empty">Checking…</p>
+                        </div>
+                    </div>
+
+                    <p class="pair-privacy">🔒 Pairing requires both partners to confirm.</p>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- ========== FOOTER ========== -->
+    <footer class="footer">
+        <div class="container footer__inner">
+            <div class="footer__brand">
+                <span class="navbar__logo-icon">💜</span>
+                <span class="navbar__logo-text">MoodSync</span>
+            </div>
+            <p class="footer__copy">&copy; 2026 MoodSync. Made with love for couples who care.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts: Supabase CDN → client → auth → pairing -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabaseClient.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/pairing.js"></script>
+</body>
+</html>

@@ -30,9 +30,9 @@
             <ul class="navbar__links">
                 <li><a href="mood.html">Log Mood</a></li>
                 <li><a href="dashboard.html" class="nav-active">Dashboard</a></li>
-                <li><a href="setup.html">Setup</a></li>
+                <li><a href="pair.html">Pairing</a></li>
             </ul>
-            <a href="mood.html" class="btn btn--sm btn--glass">Log Today</a>
+            <button id="logoutBtn" class="btn btn--sm btn--glass">Log Out</button>
             <button class="navbar__hamburger" aria-label="Toggle navigation">
                 <span></span><span></span><span></span>
             </button>
@@ -124,10 +124,20 @@
                     <p class="dash-card__desc" id="avgDesc">Based on all your logged days.</p>
                 </article>
 
-                <!-- 5. Recent Logs Card (full-width) -->
+                <!-- 5. Emotional Alignment Card -->
+                <article class="dash-card glass-card" id="moodDiffCard">
+                    <div class="dash-card__badge">Emotional Alignment</div>
+                    <div class="avg-display">
+                        <span class="avg-display__emoji" id="moodDiffValue">—</span>
+                        <span class="avg-display__label" id="moodDiffDesc">Comparing mood patterns…</span>
+                    </div>
+                    <p class="dash-card__desc">How close your moods are to your partner's.</p>
+                </article>
+
+                <!-- 6. Recent Logs Card (full-width) -->
                 <article class="dash-card dash-card--logs glass-card" id="logsCard">
                     <div class="dash-card__badge">Recent Entries</div>
-                    <h2 class="dash-card__title">Last 5 Mood Logs</h2>
+                    <h2 class="dash-card__title">Latest Mood Logs</h2>
                     <ul class="log-list" id="logList">
                         <!-- Entries injected by dashboard.js -->
                     </ul>
@@ -150,14 +160,19 @@
             <ul class="footer__links">
                 <li><a href="mood.html">Log Mood</a></li>
                 <li><a href="dashboard.html">Dashboard</a></li>
-                <li><a href="setup.html">Setup</a></li>
+                <li><a href="pair.html">Pairing</a></li>
             </ul>
         </div>
     </footer>
 
-    <script src="js/guard.js"></script>
-    <script src="js/main.js"></script>
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabaseClient.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/mood.js"></script>
     <script src="js/algorithm.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/main.js"></script>
     <script src="js/dashboard.js"></script>
 </body>
 </html>

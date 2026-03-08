@@ -111,6 +111,25 @@
                             <p class="field-error" id="passwordError" role="alert" aria-live="polite" hidden></p>
                         </div>
 
+                        <!-- Confirm Password -->
+                        <div class="form-group" id="confirmPasswordGroup">
+                            <label class="form-label" for="signupConfirmPassword">Confirm Password</label>
+                            <div class="input-wrap">
+                                <span class="input-icon" aria-hidden="true">🔒</span>
+                                <input
+                                    type="password"
+                                    id="signupConfirmPassword"
+                                    class="form-input input-with-icon input-with-toggle"
+                                    placeholder="Re-enter your password"
+                                    autocomplete="new-password"
+                                >
+                                <button type="button" class="toggle-password" id="toggleConfirmPassword" aria-label="Show confirm password">
+                                    <span id="eyeIconConfirm">👁</span>
+                                </button>
+                            </div>
+                            <p class="field-error" id="confirmPasswordError" role="alert" aria-live="polite" hidden></p>
+                        </div>
+
                         <!-- Global error banner -->
                         <p class="form-error-banner glass-card" id="formError" role="alert" aria-live="polite" hidden></p>
 
@@ -128,7 +147,7 @@
 
                     </form>
 
-                    <p class="signup__privacy">🔒 Your data stays only on your device.</p>
+                    <p class="signup__privacy">🔒 Your data is securely stored and encrypted.</p>
 
                 </div>
             </section>
@@ -146,12 +165,14 @@
             <ul class="footer__links">
                 <li><a href="mood.html">Log Mood</a></li>
                 <li><a href="dashboard.html">Dashboard</a></li>
-                <li><a href="setup.html">Setup</a></li>
             </ul>
         </div>
     </footer>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabaseClient.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/ui.js"></script>
     <script src="js/main.js"></script>
-    <script src="js/create-account.js"></script>
 </body>
 </html>

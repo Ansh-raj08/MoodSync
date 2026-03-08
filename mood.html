@@ -28,11 +28,11 @@
                 <span class="navbar__logo-text">MoodSync</span>
             </a>
             <ul class="navbar__links">
-                <li><a href="mood.html">Log Mood</a></li>
+                <li><a href="mood.html" class="nav-active">Log Mood</a></li>
                 <li><a href="dashboard.html">Dashboard</a></li>
-                <li><a href="setup.html">Setup</a></li>
+                <li><a href="pair.html">Pairing</a></li>
             </ul>
-            <a href="dashboard.html" class="btn btn--sm btn--outline">Dashboard</a>
+            <button id="logoutBtn" class="btn btn--sm btn--glass">Log Out</button>
             <button class="navbar__hamburger" aria-label="Toggle navigation">
                 <span></span><span></span><span></span>
             </button>
@@ -66,44 +66,38 @@
 
                     <form id="moodForm" class="mood-form">
 
-                        <!-- Mood picker grid -->
+                        <!-- Mood picker grid (1-9 scale: 5 anchor points) -->
                         <fieldset class="mood-picker" id="moodPicker">
                             <legend class="sr-only">Select your mood</legend>
 
-                            <label class="mood-option" title="Awful">
+                            <label class="mood-option" title="Very Bad">
                                 <input type="radio" name="mood" value="1" required>
                                 <span class="mood-option__emoji">😫</span>
-                                <span class="mood-option__label">Awful</span>
+                                <span class="mood-option__label">Very Bad</span>
                             </label>
 
                             <label class="mood-option" title="Bad">
-                                <input type="radio" name="mood" value="2">
+                                <input type="radio" name="mood" value="3">
                                 <span class="mood-option__emoji">😔</span>
                                 <span class="mood-option__label">Bad</span>
                             </label>
 
-                            <label class="mood-option" title="Okay">
-                                <input type="radio" name="mood" value="3">
+                            <label class="mood-option" title="Neutral">
+                                <input type="radio" name="mood" value="5">
                                 <span class="mood-option__emoji">😐</span>
-                                <span class="mood-option__label">Okay</span>
+                                <span class="mood-option__label">Neutral</span>
                             </label>
 
                             <label class="mood-option" title="Good">
-                                <input type="radio" name="mood" value="4">
-                                <span class="mood-option__emoji">🙂</span>
+                                <input type="radio" name="mood" value="7">
+                                <span class="mood-option__emoji">😄</span>
                                 <span class="mood-option__label">Good</span>
                             </label>
 
                             <label class="mood-option" title="Great">
-                                <input type="radio" name="mood" value="5">
-                                <span class="mood-option__emoji">😄</span>
-                                <span class="mood-option__label">Great</span>
-                            </label>
-
-                            <label class="mood-option" title="Amazing">
-                                <input type="radio" name="mood" value="6">
+                                <input type="radio" name="mood" value="9">
                                 <span class="mood-option__emoji">🥰</span>
-                                <span class="mood-option__label">Amazing</span>
+                                <span class="mood-option__label">Great</span>
                             </label>
 
                         </fieldset>
@@ -127,7 +121,7 @@
                             Save Today's Mood
                         </button>
 
-                        <p class="mood-privacy">🔒 Your data stays only on your device.</p>
+                        <p class="mood-privacy">🔒 Your data is securely stored and encrypted.</p>
 
                     </form>
                 </div>
@@ -161,12 +155,15 @@
             <ul class="footer__links">
                 <li><a href="mood.html">Log Mood</a></li>
                 <li><a href="dashboard.html">Dashboard</a></li>
-                <li><a href="setup.html">Setup</a></li>
+                <li><a href="pair.html">Pairing</a></li>
             </ul>
         </div>
     </footer>
 
-    <script src="js/guard.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabaseClient.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/ui.js"></script>
     <script src="js/main.js"></script>
     <script src="js/mood.js"></script>
 </body>

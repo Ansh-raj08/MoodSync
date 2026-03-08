@@ -139,3 +139,180 @@
     .setup-page { padding: 6rem 0 3rem; }
     .setup__card { padding: 2rem 1.4rem; }
 }
+
+
+/* ============================================================
+   PAIR PAGE — pair.html
+   ============================================================ */
+
+.pair-page {
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    align-items: center;
+    padding: 7rem 0 4rem;
+}
+
+.pair-section {
+    max-width: 520px;
+    margin-inline: auto;
+    width: 100%;
+}
+
+.pair-card {
+    padding: 2.6rem 2.4rem 2.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.8rem;
+}
+
+.pair-card__header {
+    text-align: center;
+}
+
+.pair-card__icon {
+    font-size: 2.4rem;
+    display: block;
+    margin-bottom: 0.75rem;
+}
+
+.pair-card__title {
+    font-family: var(--ff-sans);
+    font-size: clamp(1.4rem, 3.5vw, 1.8rem);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    margin-bottom: 0.4rem;
+    background: var(--grad-accent-flow);
+    background-size: 300% 300%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: gradientFlow 8s ease infinite;
+}
+
+.pair-card__sub {
+    font-size: 0.9rem;
+    color: var(--clr-text-secondary);
+    font-weight: 400;
+}
+
+/* Your pair code box */
+.pair-code-box {
+    padding: 1.2rem 1.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.pair-code-box__label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--clr-text-secondary);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.pair-code-box__row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.pair-code-box__code {
+    font-family: var(--ff-mono, monospace);
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--clr-lavender);
+    flex: 1;
+}
+
+.pair-code-box__hint {
+    font-size: 0.78rem;
+    color: var(--clr-text-tertiary);
+}
+
+/* Send request form */
+.pair-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+}
+
+.pair-form__row {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.pair-form__row .form-input {
+    flex: 1;
+}
+
+.pair-message {
+    font-size: 0.83rem;
+    font-weight: 500;
+    padding: 0.5rem 0.2rem;
+}
+
+/* Incoming / outgoing requests */
+.pair-requests {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+}
+
+.pair-requests__heading {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--clr-text-secondary);
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+}
+
+.pair-empty {
+    font-size: 0.85rem;
+    color: var(--clr-text-tertiary);
+    padding: 0.4rem 0;
+}
+
+/* Request cards */
+.pair-request-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-sm);
+    padding: 0.8rem 1rem;
+}
+
+.pair-request-item__name {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.pair-request-item__email {
+    font-size: 0.78rem;
+    color: var(--clr-text-tertiary);
+}
+
+.pair-request-item__actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+.pair-privacy {
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--clr-text-tertiary);
+    font-weight: 400;
+    letter-spacing: 0.01em;
+}
+
+@media (max-width: 640px) {
+    .pair-page { padding: 6rem 0 3rem; }
+    .pair-card { padding: 2rem 1.4rem 1.8rem; }
+    .pair-form__row { flex-direction: column; }
+}
