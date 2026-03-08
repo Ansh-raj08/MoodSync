@@ -26,9 +26,11 @@ create table if not exists profiles (
 alter table profiles enable row level security;
 
 -- Anyone authenticated can look up profiles (needed for pairing by code)
+-- NOTE: auth.uid() IS NOT NULL is more reliable than auth.role() = 'authenticated'
+-- after deployment — auth.role() can return 'anon' even when a valid session exists.
 create policy "Authenticated users can view profiles"
     on profiles for select
-    using (auth.role() = 'authenticated');
+    using (auth.uid() IS NOT NULL);
 
 -- Users can insert their own profile row on sign-up
 create policy "Users can insert own profile"

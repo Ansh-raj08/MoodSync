@@ -46,7 +46,7 @@ async function findUserByPairCode(code) {
     const { data, error } = await supabaseClient
         .from("profiles")
         .select("id, name, email, pair_code")
-        .eq("pair_code", code.trim().toLowerCase())
+        .ilike("pair_code", code.trim())   // case-insensitive match at DB level
         .maybeSingle();
 
     if (error) { console.error("[pairing.findUser]", error.message); return null; }
