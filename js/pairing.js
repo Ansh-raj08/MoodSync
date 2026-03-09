@@ -40,16 +40,48 @@ async function getMyPairCode() {
 /**
  * Look up a profile by pair code.
  * @param {string} code
- * @returns {Promise<Object|null>}
+ * @returns {Promise<Object>} profile row
+ * @throws {Error} with a specific message for auth issues vs. not-found
  */
 async function findUserByPairCode(code) {
+    // --- Sanitise input ---
+    const sanitised = code.trim().toLowerCase();
+    console.debug("[pairing.findUser] raw input:", JSON.stringify(code));
+    console.debug("[pairing.findUser] sanitised:", JSON.stringify(sanitised));
+
+    if (!sanitised) throw new Error("Pair code is empty.");
+
+    // --- Verify session is present before querying ---
+    const sessionUser = await getUser();
+    console.debug("[pairing.findUser] session uid:", sessionUser?.id ?? "NONE — not authenticated");
+    if (!sessionUser) throw new Error("You must be logged in to use a pair code.");
+
+    // --- Query ---
     const { data, error } = await supabaseClient
         .from("profiles")
         .select("id, name, email, pair_code")
-        .ilike("pair_code", code.trim())   // case-insensitive match at DB level
+        .ilike("pair_code", sanitised)   // case-insensitive DB-level match
         .maybeSingle();
 
-    if (error) { console.error("[pairing.findUser]", error.message); return null; }
+    console.debug("[pairing.findUser] supabase data:", data);
+    console.debug("[pairing.findUser] supabase error:", error);
+
+    if (error) {
+        // Distinguish RLS/auth errors from network errors
+        if (error.code === "PGRST301" || error.message?.includes("JWT")) {
+            throw new Error("Session expired. Please log out and log back in.");
+        }
+        if (error.code === "42501" || error.message?.includes("policy")) {
+            throw new Error("Permission denied. RLS policy may need to be updated in Supabase — see console.");
+        }
+        throw new Error("Database error: " + error.message);
+    }
+
+    if (!data) {
+        console.warn("[pairing.findUser] No profile found for code:", sanitised);
+        throw new Error("Invalid pair code. No user found.");
+    }
+
     return data;
 }
 
@@ -67,9 +99,8 @@ async function sendPairRequest(pairCode) {
     const existingCouple = await getCouple();
     if (existingCouple) throw new Error("You are already paired with someone.");
 
-    // Find the target
+    // Find the target — throws with a specific message if not found or auth fails
     const target = await findUserByPairCode(pairCode);
-    if (!target)           throw new Error("Invalid pair code. No user found.");
     if (target.id === user.id) throw new Error("You cannot pair with yourself.");
 
     // Check if target already paired
