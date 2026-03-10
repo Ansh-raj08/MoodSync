@@ -458,3 +458,167 @@
     .score-ring-wrap { width: 120px; height: 120px; }
     .score-ring { width: 120px; height: 120px; }
 }
+
+/* =============================================================
+   Recent Logs — glass card redesign
+   ============================================================= */
+
+/* Header row inside the logs card */
+.logs-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+.logs-card-header .dash-card__badge {
+    margin-bottom: 6px;
+}
+
+.logs-history-btn {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--clr-lavender);
+    text-decoration: none;
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid rgba(201, 140, 245, 0.30);
+    background: rgba(201, 140, 245, 0.08);
+    white-space: nowrap;
+    transition: background 0.2s, border-color 0.2s;
+    flex-shrink: 0;
+    align-self: center;
+}
+
+.logs-history-btn:hover {
+    background: rgba(201, 140, 245, 0.18);
+    border-color: rgba(201, 140, 245, 0.50);
+}
+
+/* Card grid */
+.log-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+}
+
+/* Empty state */
+.log-cards__empty {
+    grid-column: 1 / -1;
+    text-align: center;
+    font-size: 0.9rem;
+    color: var(--clr-text-secondary);
+    padding: 24px 0;
+}
+
+/* Individual log card */
+@keyframes logCardIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.log-card {
+    --card-glow: rgba(201, 140, 245, 0.20);
+
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px 14px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 0 18px var(--card-glow);
+    transition: transform 0.22s ease, box-shadow 0.22s ease;
+    animation: logCardIn 0.38s ease both;
+    min-width: 0;
+}
+
+.log-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 24px var(--card-glow);
+}
+
+/* Mood glow variants */
+.log-card--great    { --card-glow: rgba(0, 230, 120, 0.30); }
+.log-card--good     { --card-glow: rgba(80, 200, 140, 0.22); }
+.log-card--neutral  { --card-glow: rgba(80, 150, 220, 0.22); }
+.log-card--sad      { --card-glow: rgba(240, 140, 60, 0.25); }
+.log-card--very-sad { --card-glow: rgba(240, 70, 90, 0.28); }
+
+.log-card__emoji {
+    font-size: 2rem;
+    line-height: 1;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.log-card__body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.log-card__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.log-card__name {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--clr-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.log-card__mood {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    flex-shrink: 0;
+}
+
+.log-card__time {
+    font-size: 0.75rem;
+    color: var(--clr-text-secondary);
+}
+
+.log-card__note {
+    font-size: 0.78rem;
+    color: var(--clr-text-secondary);
+    margin: 2px 0 0;
+    line-height: 1.4;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* -- Responsive -- */
+@media (max-width: 700px) {
+    .log-cards-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .log-cards-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .logs-card-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}

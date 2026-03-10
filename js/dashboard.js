@@ -49,6 +49,35 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 // =============================================================
+//  Data Helpers
+// =============================================================
+
+/**
+ * Fetch the last `days` days of mood logs for both partners in a
+ * single Supabase query and return them as a flat array.
+ */
+async function fetchCoupleLogsDirectly(couple, days = 14) {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - (days - 1));
+    cutoff.setHours(0, 0, 0, 0);
+
+    const { data, error } = await supabaseClient
+        .from("mood_logs")
+        .select("id, user_id, score, note, logged_at")
+        .or(`user_id.eq.${couple.user1_id},user_id.eq.${couple.user2_id}`)
+        .gte("logged_at", cutoff.toISOString())
+        .order("logged_at", { ascending: true });
+
+    if (error) throw new Error("Failed to fetch couple logs: " + error.message);
+    return (data || []).map(row => ({
+        date:   row.logged_at.slice(0, 10),
+        userId: row.user_id,
+        score:  row.score,
+        note:   row.note,
+    }));
+}
+
+// =============================================================
 //  Main Loader
 // =============================================================
 
@@ -61,15 +90,27 @@ async function loadDashboard(user, couple) {
     try {
         const partnerId = getPartnerId(couple, user.id);
 
-        // Parallel fetch: 7-day + all-time for both users + profiles
-        const [uLogs7, pLogs7, uLogsAll, pLogsAll, uProfile, pProfile] = await Promise.all([
-            getMoodHistory(user.id, 7),
-            getMoodHistory(partnerId, 7),
+        // Parallel fetch: 14-day couple logs (for health score + recent cards)
+        //                 + all-time per-user (for trend / confidence / averages)
+        //                 + both profiles
+        const [coupleLogs14, uLogsAll, pLogsAll, uProfile, pProfile] = await Promise.all([
+            fetchCoupleLogsDirectly(couple, 14),
             getMoodHistory(user.id),
             getMoodHistory(partnerId),
             getProfile(user.id),
             getProfile(partnerId),
         ]);
+
+        // Split 14-day fetch by user
+        const uLogs14 = coupleLogs14.filter(l => l.userId === user.id);
+        const pLogs14 = coupleLogs14.filter(l => l.userId === partnerId);
+
+        // Derive 7-day window from 14-day data (no extra network call)
+        const cutoff7 = new Date();
+        cutoff7.setDate(cutoff7.getDate() - 6);
+        const cut7str  = cutoff7.toISOString().slice(0, 10);
+        const uLogs7   = uLogs14.filter(l => l.date >= cut7str);
+        const pLogs7   = pLogs14.filter(l => l.date >= cut7str);
 
         // Header
         _renderHeader(uProfile, pProfile);
@@ -82,16 +123,19 @@ async function loadDashboard(user, couple) {
 
         if (gridEl) gridEl.hidden = false;
 
-        // Algorithm — full history for stable averages
-        const result = calculateHealthScore(uLogsAll, pLogsAll);
+        // V2 health score (14-day window, 0-100 scale)
+        const v2 = calculateHealthScoreV2(uLogs14, pLogs14);
+
+        // V1 metrics — trend, confidence, alignment (uses full history for stability)
+        const v1 = calculateHealthScore(uLogsAll, pLogsAll);
 
         // Render cards
-        _renderScoreCard(result.healthScore);
-        _renderTrendCard(result.trend, uLogs7);
-        _renderConfidenceCard(result.confidence);
-        _renderAverageCard(result.average, result.partnerAverage);
-        _renderMoodDiffCard(result.moodDiff);
-        _renderRecentLogs(uLogs7, pLogs7, uProfile, pProfile);
+        _renderScoreCard(v2.healthScore);
+        _renderTrendCard(v1.trend, uLogs7);
+        _renderConfidenceCard(v1.confidence);
+        _renderAverageCard(v1.average, v1.partnerAverage);
+        _renderMoodDiffCard(v1.moodDiff);
+        _renderRecentLogs(uLogs14, pLogs14, uProfile, pProfile);
 
     } catch (err) {
         console.error("[dashboard] Load failed:", err.message);
@@ -129,10 +173,10 @@ function _renderScoreCard(score) {
     if (circleEl) {
         const C = 314;
         const offset = C - (score / 100) * C;
-        const color = score >= 70 ? "var(--clr-mint)"
-                    : score >= 50 ? "var(--clr-lavender)"
-                    : score >= 30 ? "var(--clr-pink)"
-                    : "var(--clr-rose)";
+        const color = score >= 80 ? "#3de09a"          // green
+                    : score >= 60 ? "#f5c842"          // yellow
+                    : score >= 40 ? "#f57c42"          // orange
+                    : "#f74a6b";                       // red
 
         circleEl.style.stroke = color;
         circleEl.style.strokeDashoffset = C;
@@ -269,37 +313,49 @@ function _renderMoodDiffCard(moodDiff) {
     }
 }
 
-// ---- Recent logs (combined view) ----
+// ---- Recent logs — glass card grid ----
 function _renderRecentLogs(uLogs, pLogs, uProfile, pProfile) {
-    const listEl = document.getElementById("logList");
-    if (!listEl) return;
+    const containerEl = document.getElementById("logCards");
+    if (!containerEl) return;
 
     const combined = [
         ...uLogs.map(l => ({ ...l, name: uProfile?.name || "You",     isUser: true })),
         ...pLogs.map(l => ({ ...l, name: pProfile?.name || "Partner", isUser: false })),
-    ].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 10);
+    ].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 6);
 
     if (!combined.length) {
-        listEl.innerHTML = '<li class="log-item log-item--empty">No entries yet.</li>';
+        containerEl.innerHTML = '<p class="log-cards__empty">No entries in the last 14 days.</p>';
         return;
     }
 
-    listEl.innerHTML = combined.map(e => {
-        const info  = MOOD_MAP[e.score] || MOOD_MAP[5];
-        const badge = e.isUser ? "" : '<span class="log-item__partner">Partner</span>';
+    containerEl.innerHTML = combined.map((e, i) => {
+        const info      = MOOD_MAP[e.score] || MOOD_MAP[5];
+        const moodClass = _moodCardClass(e.score);
+        const noteFrag  = e.note
+            ? `<p class="log-card__note">${_escDash(e.note)}</p>`
+            : "";
         return `
-        <li class="log-item">
-            <span class="log-item__emoji">${info.emoji}</span>
-            <div class="log-item__body">
-                <div class="log-item__top">
-                    <span class="log-item__date">${_shortDate(e.date)}</span>
-                    <span class="log-item__mood" style="color:${info.color}">${info.label}</span>
-                    ${badge}
+        <div class="log-card ${moodClass}" style="animation-delay:${i * 60}ms">
+            <span class="log-card__emoji">${info.emoji}</span>
+            <div class="log-card__body">
+                <div class="log-card__top">
+                    <span class="log-card__name">${_escDash(e.name)}</span>
+                    <span class="log-card__mood" style="color:${info.color}">${info.label}</span>
                 </div>
-                <span class="log-item__name">${_escDash(e.name)}</span>
+                <span class="log-card__time">${_shortDate(e.date)}</span>
+                ${noteFrag}
             </div>
-        </li>`;
+        </div>`;
     }).join("");
+}
+
+/** Return the CSS modifier class for a log card based on the raw score (1-9). */
+function _moodCardClass(score) {
+    if (score >= 9) return "log-card--great";
+    if (score >= 7) return "log-card--good";
+    if (score >= 5) return "log-card--neutral";
+    if (score >= 3) return "log-card--sad";
+    return "log-card--very-sad";
 }
 
 // =============================================================

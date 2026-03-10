@@ -136,11 +136,16 @@
 
                 <!-- 6. Recent Logs Card (full-width) -->
                 <article class="dash-card dash-card--logs glass-card" id="logsCard">
-                    <div class="dash-card__badge">Recent Entries</div>
-                    <h2 class="dash-card__title">Latest Mood Logs</h2>
-                    <ul class="log-list" id="logList">
-                        <!-- Entries injected by dashboard.js -->
-                    </ul>
+                    <div class="logs-card-header">
+                        <div>
+                            <div class="dash-card__badge">Recent Entries</div>
+                            <h2 class="dash-card__title">Latest Mood Logs</h2>
+                        </div>
+                        <a href="mood.html" class="logs-history-btn">View Full History →</a>
+                    </div>
+                    <div class="log-cards-grid" id="logCards">
+                        <!-- Cards injected by dashboard.js -->
+                    </div>
                 </article>
 
             </div>

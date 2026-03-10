@@ -157,3 +157,63 @@ function _recent(logs, days) {
     const cutoff = c.toISOString().slice(0, 10);
     return logs.filter(e => e.date >= cutoff);
 }
+
+// =============================================================
+//  V2 Health Score (simpler, 0-100 mood scale)
+// =============================================================
+
+/**
+ * Map a 1-9 mood score to 0-100 scale:
+ *   Very Bad (1) → 20 · Bad (3) → 40 · Neutral (5) → 60
+ *   Good (7) → 80 · Great (9) → 100
+ */
+function _toScale100(score) {
+    return (Math.max(1, Math.min(9, score)) - 1) / 8 * 80 + 20;
+}
+
+/**
+ * Average of logs on the 0-100 scale, using the last 14 days.
+ * Falls back to all logs if fewer than 14 days are available.
+ * Returns null when there are no logs at all.
+ */
+function _avg100(logs) {
+    if (!logs.length) return null;
+    const recent = _recent(logs, 14);
+    const src = recent.length ? recent : logs;
+    return src.reduce((s, e) => s + _toScale100(e.score), 0) / src.length;
+}
+
+/**
+ * Calculate Relationship Health Score — V2.
+ *
+ * Formula:
+ *   user1Avg      = mean of user1 logs mapped to 0-100 (14-day window)
+ *   user2Avg      = mean of user2 logs mapped to 0-100 (14-day window)
+ *   compatibility = 100 - |user1Avg - user2Avg|
+ *   healthScore   = clamp( (user1Avg + user2Avg + compatibility) / 3, 0, 100 )
+ *
+ * @param {Array<{date: string, score: number}>} userLogs
+ * @param {Array<{date: string, score: number}>} [partnerLogs]
+ * @returns {{ healthScore: number, user1Avg: number|null, user2Avg: number|null, compatibility: number|null }}
+ */
+function calculateHealthScoreV2(userLogs, partnerLogs = []) {
+    const u1 = _avg100(userLogs);
+    const u2 = _avg100(partnerLogs);
+
+    if (u1 === null) {
+        return { healthScore: 0, user1Avg: null, user2Avg: null, compatibility: null };
+    }
+
+    const comp = u2 !== null
+        ? Math.max(0, 100 - Math.abs(u1 - u2))
+        : 100; // no partner data → no penalty
+
+    const raw = (u1 + (u2 ?? u1) + comp) / 3;
+
+    return {
+        healthScore:   Math.round(Math.min(100, Math.max(0, raw))),
+        user1Avg:      Math.round(u1),
+        user2Avg:      u2 !== null ? Math.round(u2) : null,
+        compatibility: Math.round(comp),
+    };
+}
