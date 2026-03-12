@@ -50,6 +50,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     } else {
         try { localStorage.setItem(cacheKey, partnerName); } catch (_) {}
     }
+    // Layer 3: pairing_requests table fallback
+    if (!partnerName) {
+        partnerName = await _fetchPartnerNameViaRequest(authCtx.user.id, partnerId);
+        if (partnerName) {
+            try { localStorage.setItem(cacheKey, partnerName); } catch (_) {}
+        }
+    }
     partnerName = partnerName || "Partner";
 
     _ctx = { user: authCtx.user, couple: authCtx.couple, partnerId, myName, partnerName };
@@ -82,6 +89,27 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("nextPageBtn")?.addEventListener("click", () => {
         const total = Math.ceil(_totalCount / HISTORY_PAGE_SIZE);
         if (_currentPage < total - 1) { _currentPage++; _loadPage(); }
+    });
+
+    // Delete modal wiring
+    const deleteConfirmInput = document.getElementById("deleteConfirmInput");
+    const deleteConfirmBtn   = document.getElementById("deleteConfirmBtn");
+    const deleteCancelBtn    = document.getElementById("deleteCancelBtn");
+
+    deleteConfirmInput?.addEventListener("input", () => {
+        if (deleteConfirmBtn)
+            deleteConfirmBtn.disabled = deleteConfirmInput.value.trim().toLowerCase() !== "delete my data";
+    });
+    deleteConfirmBtn?.addEventListener("click", _confirmDelete);
+    deleteCancelBtn?.addEventListener("click", _closeDeleteModal);
+
+    // Event delegation for delete buttons in the history list
+    document.getElementById("historyList")?.addEventListener("click", (e) => {
+        const btn = e.target.closest(".history-entry__delete");
+        if (!btn) return;
+        const entryEl = btn.closest(".history-entry");
+        const entryId = entryEl?.dataset.id;
+        if (entryId) _openDeleteModal(entryId);
     });
 
     // Logout
@@ -179,13 +207,18 @@ function _renderEntries(containerEl, rows) {
             ? `<p class="history-entry__note">"${_hesc(row.note)}"</p>`
             : "";
 
+        const deleteBtn = isMe
+            ? `<button class="history-entry__delete" aria-label="Delete entry" title="Delete this entry">&#x1F5D1;</button>`
+            : "";
+
         return `
-        <div class="history-entry glass-card ${whoClass}" style="animation-delay:${Math.min(i, 15) * 35}ms">
+        <div class="history-entry glass-card ${whoClass}" data-id="${row.id}" style="animation-delay:${Math.min(i, 15) * 35}ms">
             <div class="history-entry__emoji">${info.emoji}</div>
             <div class="history-entry__body">
                 <div class="history-entry__top">
                     <span class="history-entry__mood" style="color:${info.color}">${info.label}</span>
                     <span class="history-entry__who">${_hesc(name)}</span>
+                    ${deleteBtn}
                 </div>
                 <div class="history-entry__when">${dateStr} &middot; ${timeStr}</div>
                 ${noteHtml}
@@ -229,4 +262,82 @@ function _hesc(s) {
     const div = document.createElement("div");
     div.textContent = s;
     return div.innerHTML;
+}
+
+// =============================================================
+//  Delete modal
+// =============================================================
+
+let _pendingDeleteId = null;
+
+function _openDeleteModal(entryId) {
+    _pendingDeleteId = entryId;
+    const modal = document.getElementById("deleteModal");
+    const input = document.getElementById("deleteConfirmInput");
+    const btn   = document.getElementById("deleteConfirmBtn");
+    if (!modal) return;
+    if (input) input.value = "";
+    if (btn)   btn.disabled = true;
+    modal.hidden = false;
+    input?.focus();
+}
+
+function _closeDeleteModal() {
+    _pendingDeleteId = null;
+    const modal = document.getElementById("deleteModal");
+    if (modal) modal.hidden = true;
+}
+
+async function _confirmDelete() {
+    if (!_pendingDeleteId) return;
+    const entryId = _pendingDeleteId;
+    _closeDeleteModal();
+
+    try {
+        const { error } = await supabaseClient
+            .from("mood_logs")
+            .delete()
+            .eq("id", entryId)
+            .eq("user_id", _ctx.user.id);   // RLS guard: own entries only
+
+        if (error) {
+            console.error("[mood-history] Delete failed:", error.message);
+            alert("Could not delete the entry. Please try again.");
+            return;
+        }
+
+        // Reload current page to reflect the deletion
+        _totalCount = Math.max(0, _totalCount - 1);
+        if (_currentPage > 0 && _currentPage * HISTORY_PAGE_SIZE >= _totalCount) {
+            _currentPage--;
+        }
+        await _loadPage();
+    } catch (err) {
+        console.error("[mood-history] Delete exception:", err.message);
+        alert("An unexpected error occurred. Please try again.");
+    }
+}
+
+// =============================================================
+//  Partner name fallback — pairing_requests table
+// =============================================================
+
+async function _fetchPartnerNameViaRequest(userId, partnerId) {
+    const { data } = await supabaseClient
+        .from("pairing_requests")
+        .select(
+            "sender_id,receiver_id," +
+            "sp:profiles!pairing_requests_sender_id_fkey(name)," +
+            "rp:profiles!pairing_requests_receiver_id_fkey(name)"
+        )
+        .eq("status", "accepted")
+        .or(
+            `and(sender_id.eq.${userId},receiver_id.eq.${partnerId}),` +
+            `and(sender_id.eq.${partnerId},receiver_id.eq.${userId})`
+        )
+        .limit(1)
+        .maybeSingle();
+
+    if (!data) return null;
+    return (data.sender_id === partnerId ? data.sp?.name : data.rp?.name) || null;
 }

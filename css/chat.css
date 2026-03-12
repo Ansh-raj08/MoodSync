@@ -450,3 +450,87 @@
 .chat-send-btn--pop {
     animation: sendPop 280ms var(--ease-spring) forwards;
 }
+
+/* ============================================================
+   WhatsApp-style delivery ticks
+   ============================================================ */
+.chat-bubble-tick {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    flex-shrink: 0;
+    transition: color 0.3s ease;
+}
+
+.chat-bubble-tick--sending {
+    color: rgba(255, 255, 255, 0.30);
+    animation: statusPulse 1.5s ease-in-out infinite;
+}
+
+.chat-bubble-tick--delivered {
+    color: rgba(255, 255, 255, 0.55);
+}
+
+.chat-bubble-tick--seen {
+    color: #5de8c5;
+    text-shadow: 0 0 5px rgba(93, 232, 197, 0.45);
+}
+
+.chat-bubble-tick--failed {
+    color: #f08080;
+}
+
+/* ============================================================
+   Soft-deleted bubble
+   ============================================================ */
+.chat-bubble--deleted {
+    font-style: italic;
+    opacity: 0.45;
+    user-select: none;
+}
+
+.chat-message-row--me .chat-bubble--deleted {
+    background: rgba(201, 140, 245, 0.10) !important;
+    box-shadow: none !important;
+}
+
+.chat-message-row--partner .chat-bubble--deleted {
+    background: rgba(255, 255, 255, 0.04) !important;
+}
+
+/* ============================================================
+   Delete button (hover-reveal, top-right of bubble)
+   ============================================================ */
+.chat-bubble {
+    position: relative; /* ensure delete btn positions correctly */
+}
+
+.chat-delete-btn {
+    position: absolute;
+    top: -9px;
+    right: -9px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: rgba(20, 10, 40, 0.88);
+    border: 1px solid rgba(240, 128, 128, 0.40);
+    color: #f08080;
+    font-size: 0.55rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.18s ease, background 0.18s;
+    padding: 0;
+    z-index: 10;
+}
+
+.chat-delete-btn:hover {
+    background: rgba(240, 128, 128, 0.20);
+}
+
+.chat-message-row:hover .chat-delete-btn {
+    opacity: 1;
+}

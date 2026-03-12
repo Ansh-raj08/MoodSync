@@ -157,6 +157,7 @@ async function loadDashboard(user, couple) {
         _renderMoodDiffCard(v1.moodDiff);
         _renderMoodGraph(coupleLogs14, user.id, partnerId, myName, partnerName);
         _renderRecentLogs(uLogs14, pLogs14, myName, partnerName);
+        _checkTodayLogged(user.id, uLogs14);
 
     } catch (err) {
         console.error("[dashboard] Load failed:", err.message);
@@ -563,6 +564,24 @@ async function _fetchPartnerNameViaRequest(userId, partnerId) {
 // =============================================================
 //  Utilities
 // =============================================================
+
+function _checkTodayLogged(userId, logs14) {
+    const ctaEl = document.getElementById("logMoodCta");
+    if (!ctaEl) return;
+    // UTC date comparison — consistent with how fetchCoupleLogsDirectly stores dates
+    const todayStr    = new Date().toISOString().slice(0, 10);
+    const loggedToday = logs14.some(l => l.userId === userId && l.date === todayStr);
+
+    if (loggedToday) {
+        ctaEl.innerHTML = '<span class="btn__icon">✓</span> Today\'s mood logged';
+        ctaEl.classList.add("dash-cta--logged");
+        ctaEl.removeAttribute("href");
+    } else {
+        ctaEl.innerHTML = '<span class="btn__icon">✨</span> Log Today\'s Mood';
+        ctaEl.setAttribute("href", "mood.html");
+        ctaEl.classList.remove("dash-cta--logged");
+    }
+}
 
 function _shortDate(ds) {
     return new Date(ds + "T00:00:00").toLocaleDateString("en-US", {

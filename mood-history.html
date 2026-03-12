@@ -62,7 +62,7 @@
             </div>
 
             <!-- Loading -->
-            <div id="historyLoading" class="history-loading">
+            <div id="historyLoading" class="history-loading" hidden>
                 <span class="history-loading__spinner"></span>
                 <p>Loading mood history…</p>
             </div>
@@ -90,6 +90,19 @@
 
         </div>
     </main>
+
+    <!-- Delete confirmation modal -->
+    <div id="deleteModal" class="history-modal-overlay" hidden>
+        <div class="history-modal glass-card" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle">
+            <h2 class="history-modal__title" id="deleteModalTitle">Delete Mood Entry</h2>
+            <p class="history-modal__body">This will permanently delete this mood entry. Type <strong>delete my data</strong> to confirm:</p>
+            <input type="text" id="deleteConfirmInput" class="history-modal__input" placeholder="Type: delete my data" autocomplete="off">
+            <div class="history-modal__actions">
+                <button id="deleteConfirmBtn" class="btn btn--sm btn--glass" disabled>Delete</button>
+                <button id="deleteCancelBtn" class="btn btn--sm btn--ghost">Cancel</button>
+            </div>
+        </div>
+    </div>
 
     <!-- ========== FOOTER ========== -->
     <footer class="footer">

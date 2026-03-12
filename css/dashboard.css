@@ -686,3 +686,12 @@
     .graph-legend     { gap: 12px; }
 }
 
+/* ---- Today's mood already logged — CTA turns green ---- */
+.dash-cta--logged {
+    background: rgba(61, 224, 154, 0.12) !important;
+    border-color: rgba(61, 224, 154, 0.35) !important;
+    color: #3de09a !important;
+    pointer-events: none;
+    cursor: default;
+}
+

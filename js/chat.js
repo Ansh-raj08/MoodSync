@@ -165,7 +165,7 @@ async function _fetchPartnerNameViaRequest(userId, partnerId) {
 async function _fetchMessages({ before = null } = {}) {
     let query = supabaseClient
         .from("messages")
-        .select("id, sender_id, receiver_id, message, created_at")
+        .select("id, sender_id, receiver_id, message, created_at, delivered_at, seen_at, is_deleted")
         .or(
             `and(sender_id.eq.${_user.id},receiver_id.eq.${_partnerId}),` +
             `and(sender_id.eq.${_partnerId},receiver_id.eq.${_user.id})`
@@ -190,9 +190,10 @@ async function _fetchMessages({ before = null } = {}) {
  */
 async function _insertMessage(text) {
     const payload = {
-        sender_id:   _user.id,
-        receiver_id: _partnerId,
-        message:     text,
+        sender_id:    _user.id,
+        receiver_id:  _partnerId,
+        message:      text,
+        delivered_at: new Date().toISOString(),
     };
 
     console.log("[chat] INSERT payload →", payload);
@@ -241,6 +242,7 @@ async function _loadRecentMessages() {
 
         rows.forEach(row => _appendMessage(row, "bottom", true));
         _scrollToBottom(false);
+        await _markMessagesAsSeen();
     } catch (err) {
         console.error("[chat] History load failed:", err.message);
         _setStatus("Error loading messages — refresh to retry");
@@ -290,9 +292,9 @@ async function _loadOlderMessages() {
  * @param {Object}  row
  * @param {"top"|"bottom"} pos
  * @param {boolean} skipScroll
- * @param {"sending"|"delivered"|"failed"|null} msgStatus  – iMessage delivery state
- * @param {string|null} retryText  – stored for tap-to-retry (failed messages only)
- * @returns {HTMLElement|undefined}  the created row element
+ * @param {"sending"|"delivered"|"seen"|"failed"|null} msgStatus
+ * @param {string|null} retryText
+ * @returns {HTMLElement|undefined}
  */
 function _appendMessage(row, pos = "bottom", skipScroll = false, msgStatus = null, retryText = null) {
     // ---- Duplicate guard ----
@@ -306,6 +308,12 @@ function _appendMessage(row, pos = "bottom", skipScroll = false, msgStatus = nul
 
     const isMe = row.sender_id === _user.id;
     const dt   = new Date(row.created_at);
+
+    // Auto-detect delivery status from DB fields (for DB-loaded messages)
+    if (!msgStatus && isMe) {
+        if (row.seen_at)           msgStatus = "seen";
+        else if (row.delivered_at) msgStatus = "delivered";
+    }
 
     // ---- Date separator ----
     const dayKey = dt.toISOString().slice(0, 10);
@@ -322,31 +330,47 @@ function _appendMessage(row, pos = "bottom", skipScroll = false, msgStatus = nul
     }
 
     // ---- Message row ----
-    const rowEl       = document.createElement("div");
-    rowEl.className   = `chat-message-row chat-message-row--${isMe ? "me" : "partner"}`;
+    const rowEl      = document.createElement("div");
+    rowEl.className  = `chat-message-row chat-message-row--${isMe ? "me" : "partner"}`;
     rowEl.dataset.id  = row.id;
     rowEl.dataset.day = dayKey;
 
-    // Compact mode: consecutive messages from same sender on same day
+    if (msgStatus === "sending") rowEl.classList.add("chat-message-row--pending");
+    if (msgStatus === "failed")  rowEl.classList.add("chat-message-row--failed");
+    if (retryText)               rowEl.dataset.retryText = retryText;
+
+    // Compact: consecutive messages from same sender on same day
     const prev = containerEl.querySelectorAll(
         `.chat-message-row--${isMe ? "me" : "partner"}[data-day="${dayKey}"]`
     );
     if (prev.length > 0) rowEl.classList.add("chat-message-row--compact");
 
-    // iMessage state class
-    if (msgStatus === "sending") rowEl.classList.add("chat-message-row--pending");
-    if (msgStatus === "failed")  rowEl.classList.add("chat-message-row--failed");
-
-    // Store retry text so the click handler can re-send
-    if (retryText) rowEl.dataset.retryText = retryText;
-
     // ---- Bubble ----
-    const bubble      = document.createElement("div");
-    bubble.className  = "chat-bubble";
-    bubble.textContent = row.message;   // textContent → XSS-safe
+    const bubble = document.createElement("div");
+    if (row.is_deleted) {
+        bubble.className   = "chat-bubble chat-bubble--deleted";
+        bubble.textContent = "Message deleted";
+    } else {
+        bubble.className = "chat-bubble";
+        bubble.appendChild(document.createTextNode(row.message));   // XSS-safe
 
-    // ---- Meta row: timestamp + delivery status ----
-    const metaEl    = document.createElement("div");
+        // Delete button — own confirmed messages only
+        if (isMe && msgStatus !== "sending" && msgStatus !== "failed") {
+            const delBtn = document.createElement("button");
+            delBtn.className   = "chat-delete-btn";
+            delBtn.setAttribute("aria-label", "Delete message");
+            delBtn.title       = "Delete message";
+            delBtn.textContent = "✕";
+            delBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                _deleteMessage(row.id, rowEl);
+            });
+            bubble.appendChild(delBtn);
+        }
+    }
+
+    // ---- Meta: time + WhatsApp-style delivery tick ----
+    const metaEl     = document.createElement("div");
     metaEl.className = "chat-bubble-meta";
 
     const timeEl      = document.createElement("span");
@@ -354,34 +378,34 @@ function _appendMessage(row, pos = "bottom", skipScroll = false, msgStatus = nul
     timeEl.textContent = dt.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
     metaEl.appendChild(timeEl);
 
-    // Delivery status — only for my own messages
+    // Tick — only on my own messages
     if (isMe && msgStatus) {
-        const statusEl    = document.createElement("span");
-        statusEl.className = "chat-bubble-status";
+        const tickEl    = document.createElement("span");
+        tickEl.className = "chat-bubble-tick";
 
         if (msgStatus === "sending") {
-            statusEl.textContent  = "Sending…";
-            statusEl.className   += " chat-bubble-status--sending";
+            tickEl.textContent = "···";
+            tickEl.classList.add("chat-bubble-tick--sending");
+        } else if (msgStatus === "seen") {
+            tickEl.textContent = "✓✓";
+            tickEl.classList.add("chat-bubble-tick--seen");
         } else if (msgStatus === "delivered") {
-            statusEl.textContent  = "✓ Delivered";
-            statusEl.className   += " chat-bubble-status--delivered";
-            // Fade out after 3 s — keeps UI clean
-            setTimeout(() => statusEl.classList.add("chat-bubble-status--fadeout"), 3000);
+            tickEl.textContent = "✓";
+            tickEl.classList.add("chat-bubble-tick--delivered");
         } else if (msgStatus === "failed") {
-            statusEl.textContent  = "⚠ Failed · Tap to retry";
-            statusEl.className   += " chat-bubble-status--failed";
+            tickEl.textContent = "⚠";
+            tickEl.classList.add("chat-bubble-tick--failed");
         }
-
-        metaEl.appendChild(statusEl);
+        metaEl.appendChild(tickEl);
     }
 
     rowEl.appendChild(bubble);
     rowEl.appendChild(metaEl);
 
-    // ---- Tap-to-retry ----
+    // Tap-to-retry for failed messages
     if (msgStatus === "failed") {
         rowEl.addEventListener("click", () => _retryMessage(rowEl));
-        rowEl.title = "Tap to retry sending this message";
+        rowEl.title = "Tap to retry";
     }
 
     // ---- Insert into DOM ----
@@ -455,7 +479,7 @@ async function _sendMessage() {
         tempEl?.remove();
 
         if (!_renderedIds.has(confirmed.id)) {
-            _appendMessage(confirmed, "bottom", false, "delivered");
+            _appendMessage(confirmed, "bottom", false);  // auto-detects ✓ delivered from confirmed.delivered_at
         }
 
     } catch (err) {
@@ -507,6 +531,76 @@ function _retryMessage(rowEl) {
 }
 
 // =============================================================
+//  Delivery / seen tracking
+// =============================================================
+
+/** Mark all unread partner messages in this conversation as seen. */
+async function _markMessagesAsSeen() {
+    if (!_user || !_partnerId) return;
+    try {
+        const { error } = await supabaseClient
+            .from("messages")
+            .update({ seen_at: new Date().toISOString() })
+            .eq("sender_id", _partnerId)
+            .eq("receiver_id", _user.id)
+            .is("seen_at", null);
+        if (error) console.error("[chat] markAsSeen:", error.message);
+    } catch (err) {
+        console.error("[chat] markAsSeen exception:", err.message);
+    }
+}
+
+/** Handle a realtime UPDATE event — refresh tick or show deleted state. */
+function _updateMessageInDom(row) {
+    const rowEl = document.querySelector(`.chat-message-row[data-id="${row.id}"]`);
+    if (!rowEl) return;
+
+    const isMe = row.sender_id === _user.id;
+
+    // Soft-delete: replace bubble content
+    if (row.is_deleted) {
+        const existingBubble = rowEl.querySelector(".chat-bubble");
+        if (existingBubble && !existingBubble.classList.contains("chat-bubble--deleted")) {
+            existingBubble.classList.add("chat-bubble--deleted");
+            existingBubble.innerHTML = "";
+            existingBubble.textContent = "Message deleted";
+        }
+    }
+
+    // Tick update: seen_at just set → upgrade ✓ → ✓✓
+    if (isMe && row.seen_at) {
+        const tickEl = rowEl.querySelector(".chat-bubble-tick");
+        if (tickEl && !tickEl.classList.contains("chat-bubble-tick--seen")) {
+            tickEl.textContent = "✓✓";
+            tickEl.className   = "chat-bubble-tick chat-bubble-tick--seen";
+        }
+    }
+}
+
+/** Soft-delete a message: confirm, UPDATE is_deleted, update DOM. */
+async function _deleteMessage(messageId, rowEl) {
+    if (!confirm("Delete this message? It will show as 'Message deleted' for both users.")) return;
+    try {
+        const { error } = await supabaseClient
+            .from("messages")
+            .update({ is_deleted: true })
+            .eq("id", messageId)
+            .eq("sender_id", _user.id);   // RLS: sender only
+        if (error) { console.error("[chat] delete:", error.message); return; }
+
+        // Update DOM immediately (realtime UPDATE will also fire)
+        const bubble = rowEl?.querySelector(".chat-bubble");
+        if (bubble && !bubble.classList.contains("chat-bubble--deleted")) {
+            bubble.classList.add("chat-bubble--deleted");
+            bubble.innerHTML = "";
+            bubble.textContent = "Message deleted";
+        }
+    } catch (err) {
+        console.error("[chat] deleteMessage exception:", err.message);
+    }
+}
+
+// =============================================================
 //  Realtime subscription
 // =============================================================
 
@@ -522,16 +616,32 @@ function _subscribeRealtime() {
             (payload) => {
                 const row = payload.new;
 
-                // Guard: only handle messages from this conversation
                 const ours =
                     (row.sender_id === _user.id   && row.receiver_id === _partnerId) ||
                     (row.sender_id === _partnerId && row.receiver_id === _user.id);
 
                 if (!ours) return;
 
-                // Partner's incoming messages → normal render.
-                // My own messages → already rendered as "delivered"; dedup blocks re-render.
                 _appendMessage(row, "bottom");
+
+                // If partner sent this, mark it as seen immediately
+                if (row.sender_id === _partnerId) {
+                    _markMessagesAsSeen();
+                }
+            }
+        )
+        .on(
+            "postgres_changes",
+            { event: "UPDATE", schema: "public", table: "messages" },
+            (payload) => {
+                const row = payload.new;
+
+                const ours =
+                    (row.sender_id === _user.id   && row.receiver_id === _partnerId) ||
+                    (row.sender_id === _partnerId && row.receiver_id === _user.id);
+
+                if (!ours) return;
+                _updateMessageInDom(row);
             }
         )
         .subscribe((status) => {
