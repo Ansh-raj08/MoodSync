@@ -1,0 +1,276 @@
+/* =============================================================
+   mood-history.css — Full Mood History Page
+   MoodSync · Inherits design tokens from css/style.css
+   ============================================================= */
+
+/* ---- Page shell ---- */
+
+.history-page {
+    min-height: 100vh;
+    padding-top: 100px;
+    padding-bottom: 80px;
+    font-family: var(--ff-sans);
+    color: var(--clr-text);
+}
+
+/* ---- Header ---- */
+
+.history-header {
+    margin-bottom: 32px;
+    padding: 0 24px;
+}
+
+.history-back {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--clr-lavender);
+    opacity: 0.70;
+    margin-bottom: 18px;
+    letter-spacing: 0.01em;
+    transition: opacity 0.2s;
+}
+
+.history-back:hover { opacity: 1; }
+
+.history-header__label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--clr-text-secondary);
+    margin-bottom: 4px;
+}
+
+.history-header__title {
+    font-size: clamp(1.8rem, 4vw, 2.4rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg,
+        var(--clr-pink)     0%,
+        var(--clr-lavender) 45%,
+        var(--clr-indigo)   80%,
+        var(--clr-pink)     100%);
+    background-size: 300% 300%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: gradientFlow 8s ease infinite;
+    margin-bottom: 6px;
+}
+
+.history-header__sub {
+    font-size: 0.9rem;
+    color: var(--clr-text-secondary);
+}
+
+/* ---- Filter bar ---- */
+
+.history-filters {
+    display: flex;
+    gap: 6px;
+    padding: 8px 10px;
+    border-radius: 22px;
+    margin: 0 0 28px;
+    width: fit-content;
+}
+
+.history-filter-btn {
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 14px;
+    padding: 7px 20px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--clr-text-secondary);
+    cursor: pointer;
+    transition: color 0.2s, background 0.2s, border-color 0.2s;
+    font-family: var(--ff-sans);
+    white-space: nowrap;
+}
+
+.history-filter-btn:hover {
+    color: var(--clr-text);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.history-filter-btn--active {
+    color: var(--clr-lavender);
+    background: rgba(201, 140, 245, 0.13);
+    border-color: rgba(201, 140, 245, 0.32);
+}
+
+/* ---- Loading spinner ---- */
+
+.history-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    padding: 64px 0;
+    color: var(--clr-text-secondary);
+    font-size: 0.9rem;
+}
+
+.history-loading__spinner {
+    width: 34px;
+    height: 34px;
+    border: 3px solid rgba(255, 255, 255, 0.10);
+    border-top-color: var(--clr-lavender);
+    border-radius: 50%;
+    animation: historySpinnerRot 0.75s linear infinite;
+}
+
+@keyframes historySpinnerRot {
+    to { transform: rotate(360deg); }
+}
+
+/* ---- Empty state ---- */
+
+.history-empty {
+    max-width: 460px;
+    margin: 40px auto;
+    padding: 56px 40px;
+    text-align: center;
+    border-radius: 28px;
+}
+
+.history-empty__icon {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: 16px;
+}
+
+.history-empty h2 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: var(--clr-text);
+}
+
+.history-empty p {
+    font-size: 0.9rem;
+    color: var(--clr-text-secondary);
+    margin-bottom: 28px;
+    line-height: 1.6;
+}
+
+/* ---- Entry list ---- */
+
+.history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 32px;
+}
+
+/* Individual entry card */
+
+@keyframes historyEntryIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.history-entry {
+    display: flex;
+    align-items: flex-start;
+    gap: 18px;
+    padding: 18px 22px;
+    border-radius: 20px;
+    animation: historyEntryIn 0.36s ease both;
+    transition: transform 0.2s var(--ease-smooth), background 0.2s;
+}
+
+.history-entry:hover {
+    transform: translateX(5px);
+    background: rgba(255, 255, 255, 0.11) !important;
+}
+
+/* Coloured left accent per owner */
+.history-entry--me      { border-left: 3px solid rgba(201, 140, 245, 0.55); }
+.history-entry--partner { border-left: 3px solid rgba(247, 160, 190, 0.55); }
+
+.history-entry__emoji {
+    font-size: 2.2rem;
+    line-height: 1;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.history-entry__body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.history-entry__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.history-entry__mood {
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.history-entry__who {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--clr-text-secondary);
+    padding: 3px 11px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.history-entry__when {
+    font-size: 0.80rem;
+    color: var(--clr-text-secondary);
+    letter-spacing: 0.01em;
+}
+
+.history-entry__note {
+    font-size: 0.84rem;
+    color: var(--clr-text-secondary);
+    font-style: italic;
+    margin-top: 4px;
+    line-height: 1.55;
+    padding-left: 12px;
+    border-left: 2px solid rgba(255, 255, 255, 0.14);
+}
+
+/* ---- Pagination ---- */
+
+.history-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    padding: 8px 0 32px;
+    flex-wrap: wrap;
+}
+
+.history-pagination__info {
+    font-size: 0.82rem;
+    color: var(--clr-text-secondary);
+    white-space: nowrap;
+}
+
+/* ---- Responsive ---- */
+
+@media (max-width: 600px) {
+    .history-header  { padding: 0 12px; }
+    .history-filters { flex-wrap: wrap; }
+    .history-entry   { padding: 14px 16px; gap: 12px; }
+    .history-entry__emoji { font-size: 1.8rem; }
+    .history-entry__top   { gap: 6px; }
+    .history-empty   { padding: 40px 24px; }
+}

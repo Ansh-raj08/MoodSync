@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MoodSync — Mood History</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/mood-history.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Animated Background Orbs -->
+    <div class="bg-orbs" aria-hidden="true">
+        <div class="orb orb--1"></div>
+        <div class="orb orb--2"></div>
+        <div class="orb orb--3"></div>
+        <div class="orb orb--4"></div>
+    </div>
+
+    <!-- ========== NAVBAR ========== -->
+    <nav class="navbar">
+        <div class="container navbar__inner">
+            <a href="index.html" class="navbar__logo">
+                <span class="navbar__logo-icon">💜</span>
+                <span class="navbar__logo-text">MoodSync</span>
+            </a>
+            <ul class="navbar__links">
+                <li><a href="mood.html">Log Mood</a></li>
+                <li><a href="dashboard.html">Dashboard</a></li>
+                <li><a href="chat.html">Chat</a></li>
+                <li><a href="pair.html">Pairing</a></li>
+            </ul>
+            <button id="logoutBtn" class="btn btn--sm btn--glass">Log Out</button>
+            <button class="navbar__hamburger" aria-label="Toggle navigation">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ========== MAIN ========== -->
+    <main class="history-page">
+        <div class="container">
+
+            <!-- Page header -->
+            <header class="history-header">
+                <a href="dashboard.html" class="history-back">← Back to Dashboard</a>
+                <div class="history-header__text">
+                    <p class="history-header__label">All Entries</p>
+                    <h1 class="history-header__title">Mood History</h1>
+                    <p class="history-header__sub" id="historySubtitle">Loading…</p>
+                </div>
+            </header>
+
+            <!-- Filter bar -->
+            <div class="history-filters glass-card">
+                <button class="history-filter-btn history-filter-btn--active" data-filter="all">All</button>
+                <button class="history-filter-btn" data-filter="me" id="filterMeBtn">Mine</button>
+                <button class="history-filter-btn" data-filter="partner" id="filterPartnerBtn">Partner</button>
+            </div>
+
+            <!-- Loading -->
+            <div id="historyLoading" class="history-loading">
+                <span class="history-loading__spinner"></span>
+                <p>Loading mood history…</p>
+            </div>
+
+            <!-- Empty state -->
+            <div id="historyEmpty" class="history-empty glass-card" hidden>
+                <span class="history-empty__icon">📭</span>
+                <h2>No entries yet</h2>
+                <p>Start logging moods to see them here.</p>
+                <a href="mood.html" class="btn btn--glass btn--lg">
+                    <span class="btn__icon">✨</span>
+                    Log Today's Mood
+                </a>
+            </div>
+
+            <!-- Entry list -->
+            <div id="historyList" class="history-list" hidden></div>
+
+            <!-- Pagination -->
+            <div class="history-pagination" id="historyPagination" hidden>
+                <button id="prevPageBtn" class="btn btn--glass btn--sm" disabled>← Newer</button>
+                <span class="history-pagination__info" id="pageInfo">Page 1</span>
+                <button id="nextPageBtn" class="btn btn--glass btn--sm">Older →</button>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- ========== FOOTER ========== -->
+    <footer class="footer">
+        <div class="container footer__inner">
+            <div class="footer__brand">
+                <span class="navbar__logo-icon">💜</span>
+                <span class="navbar__logo-text">MoodSync</span>
+            </div>
+            <p class="footer__copy">&copy; 2026 MoodSync. Made with love for couples who care.</p>
+            <ul class="footer__links">
+                <li><a href="mood.html">Log Mood</a></li>
+                <li><a href="dashboard.html">Dashboard</a></li>
+                <li><a href="pair.html">Pairing</a></li>
+            </ul>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabaseClient.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/mood.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/mood-history.js"></script>
+
+    <!-- Prototype label -->
+    <div style="position:fixed;bottom:12px;right:16px;font-size:11px;font-family:'Inter',sans-serif;color:rgba(255,255,255,0.35);letter-spacing:0.04em;pointer-events:none;z-index:9999;">
+        Prototype V-1.0.0
+    </div>
+</body>
+</html>

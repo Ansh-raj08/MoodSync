@@ -622,3 +622,67 @@
         align-items: flex-start;
     }
 }
+
+/* =============================================================
+   Mood Trend Graph Card
+   ============================================================= */
+
+.dash-card--graph {
+    grid-column: 1 / -1;
+    min-height: unset;
+    padding: 28px 28px 20px;
+    gap: 12px;
+}
+
+.graph-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.graph-legend {
+    display: flex;
+    gap: 18px;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.graph-legend__item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--clr-text-secondary);
+}
+
+.graph-legend__dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.graph-legend__dot--me {
+    background: #c98cf5;
+    box-shadow: 0 0 8px rgba(201, 140, 245, 0.65);
+}
+
+.graph-legend__dot--partner {
+    background: #f7a0be;
+    box-shadow: 0 0 8px rgba(247, 160, 190, 0.65);
+}
+
+.graph-wrap {
+    position: relative;
+    height: 260px;
+}
+
+@media (max-width: 700px) {
+    .dash-card--graph { padding: 22px 16px 16px; }
+    .graph-wrap       { height: 200px; }
+    .graph-legend     { gap: 12px; }
+}
+

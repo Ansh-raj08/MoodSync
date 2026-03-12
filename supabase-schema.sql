@@ -25,21 +25,34 @@ create table if not exists profiles (
 
 alter table profiles enable row level security;
 
--- Anyone authenticated can look up profiles (needed for pairing by code)
--- NOTE: auth.uid() IS NOT NULL is more reliable than auth.role() = 'authenticated'
--- after deployment — auth.role() can return 'anon' even when a valid session exists.
---
--- !! ACTION REQUIRED: Run this block in Supabase Dashboard → SQL Editor !!
--- The file alone does not update the live database.
+-- !! ACTION REQUIRED: Run the DROP + CREATE below in Supabase Dashboard → SQL Editor
+--    to ensure the correct policy is active (replaces any old restrictive policy).
 --
 --   DROP POLICY IF EXISTS "Authenticated users can view profiles" ON profiles;
---   CREATE POLICY "Authenticated users can view profiles"
---       ON profiles FOR SELECT
---       USING (auth.uid() IS NOT NULL);
+--   DROP POLICY IF EXISTS "Users can view own profile" ON profiles;
 --
-create policy "Authenticated users can view profiles"
+--   CREATE POLICY "Users can view own and partner profile"
+--       ON profiles FOR SELECT
+--       USING (
+--           auth.uid() = id
+--           OR EXISTS (
+--               SELECT 1 FROM couples
+--               WHERE (user1_id = auth.uid() AND user2_id = profiles.id)
+--                  OR (user2_id = auth.uid() AND user1_id = profiles.id)
+--           )
+--       );
+--
+-- The policy below is the correct default for new deployments.
+create policy "Users can view own and partner profile"
     on profiles for select
-    using (auth.uid() IS NOT NULL);
+    using (
+        auth.uid() = id
+        or exists (
+            select 1 from couples
+            where (user1_id = auth.uid() and user2_id = profiles.id)
+               or (user2_id = auth.uid() and user1_id = profiles.id)
+        )
+    );
 
 -- Users can insert their own profile row on sign-up
 create policy "Users can insert own profile"
@@ -180,3 +193,47 @@ create policy "Users can insert own mood logs"
 -- or via SQL:
 alter publication supabase_realtime add table mood_logs;
 alter publication supabase_realtime add table pairing_requests;
+
+
+-- ============================================================
+--  6. MESSAGES (partner-to-partner chat)
+-- ============================================================
+
+create table if not exists messages (
+    id          uuid        primary key default gen_random_uuid(),
+    sender_id   uuid        not null references auth.users on delete cascade,
+    receiver_id uuid        not null references auth.users on delete cascade,
+    message     text        not null,
+    created_at  timestamptz not null default now(),
+
+    -- Prevent blank / whitespace-only messages at DB level
+    constraint messages_message_not_blank check (trim(message) <> '')
+);
+
+-- Performance indexes
+create index if not exists idx_messages_sender_id   on messages (sender_id);
+create index if not exists idx_messages_receiver_id on messages (receiver_id);
+create index if not exists idx_messages_created_at  on messages (created_at);
+
+-- Composite index for the common "conversation" query pattern
+create index if not exists idx_messages_conversation
+    on messages (sender_id, receiver_id, created_at);
+
+alter table messages enable row level security;
+
+-- Only participants of the message can read it
+create policy "Message participants can view"
+    on messages for select
+    using (auth.uid() = sender_id or auth.uid() = receiver_id);
+
+-- Only the sender can insert (and only as themselves)
+create policy "Sender can insert own message"
+    on messages for insert
+    with check (auth.uid() = sender_id);
+
+-- Nobody can update or delete — immutable messages
+-- (no UPDATE or DELETE policies → denied by RLS default)
+
+-- Enable realtime for messages
+alter publication supabase_realtime add table messages;
+

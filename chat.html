@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MoodSync — Chat</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/chat.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body class="chat-body">
+
+    <!-- Animated Background Orbs -->
+    <div class="bg-orbs" aria-hidden="true">
+        <div class="orb orb--1"></div>
+        <div class="orb orb--2"></div>
+        <div class="orb orb--3"></div>
+        <div class="orb orb--4"></div>
+    </div>
+
+    <!-- ========== NAVBAR ========== -->
+    <nav class="navbar">
+        <div class="container navbar__inner">
+            <a href="index.html" class="navbar__logo">
+                <span class="navbar__logo-icon">💜</span>
+                <span class="navbar__logo-text">MoodSync</span>
+            </a>
+            <ul class="navbar__links">
+                <li><a href="mood.html">Log Mood</a></li>
+                <li><a href="dashboard.html">Dashboard</a></li>
+                <li><a href="chat.html" class="nav-active">Chat</a></li>
+                <li><a href="pair.html">Pairing</a></li>
+            </ul>
+            <button id="logoutBtn" class="btn btn--sm btn--glass">Log Out</button>
+            <button class="navbar__hamburger" aria-label="Toggle navigation">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ========== CHAT SHELL ========== -->
+    <main class="chat-main">
+
+        <!-- Chat window -->
+        <div class="chat-window glass-card">
+
+            <!-- Top bar -->
+            <header class="chat-topbar">
+                <div class="chat-topbar__avatar" id="partnerAvatar" aria-hidden="true">?</div>
+                <div class="chat-topbar__info">
+                    <span class="chat-topbar__name" id="partnerName">Partner</span>
+                    <span class="chat-topbar__status" id="chatStatus">Loading…</span>
+                </div>
+                <a href="dashboard.html" class="chat-topbar__back" title="Back to Dashboard">←</a>
+            </header>
+
+            <!-- Load older messages -->
+            <div class="chat-load-more" id="loadMoreWrap" hidden>
+                <button class="btn btn--ghost btn--sm" id="loadMoreBtn">
+                    Load older messages ↑
+                </button>
+            </div>
+
+            <!-- Message list -->
+            <div class="chat-messages" id="chatMessages" role="log" aria-live="polite" aria-label="Conversation">
+                <!-- Skeleton / empty state rendered by JS -->
+                <div class="chat-empty" id="chatEmpty" hidden>
+                    <span class="chat-empty__icon">💬</span>
+                    <p>No messages yet — say hello!</p>
+                </div>
+            </div>
+
+            <!-- Input bar -->
+            <form class="chat-input-bar" id="chatForm" autocomplete="off">
+                <textarea
+                    id="chatInput"
+                    class="chat-input"
+                    placeholder="Message your partner…"
+                    rows="1"
+                    maxlength="500"
+                    aria-label="Type a message"
+                ></textarea>
+                <button type="submit" class="chat-send-btn" id="chatSendBtn" aria-label="Send message" disabled>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <line x1="22" y1="2" x2="11" y2="13"/>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                    </svg>
+                </button>
+            </form>
+
+        </div>
+        <!-- /chat-window -->
+
+    </main>
+
+    <!-- ========== FOOTER ========== -->
+    <footer class="footer chat-footer">
+        <div class="container footer__inner">
+            <div class="footer__brand">
+                <span class="navbar__logo-icon">💜</span>
+                <span class="navbar__logo-text">MoodSync</span>
+            </div>
+            <p class="footer__copy">&copy; 2026 MoodSync. Made with love for couples who care.</p>
+            <ul class="footer__links">
+                <li><a href="mood.html">Log Mood</a></li>
+                <li><a href="dashboard.html">Dashboard</a></li>
+                <li><a href="pair.html">Pairing</a></li>
+            </ul>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabaseClient.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/chat.js"></script>
+
+    <!-- Prototype label -->
+    <div style="position:fixed;bottom:12px;right:16px;font-size:11px;font-family:'Inter',sans-serif;color:rgba(255,255,255,0.35);letter-spacing:0.04em;pointer-events:none;z-index:9999;">
+        Prototype V-1.0.0
+    </div>
+</body>
+</html>
