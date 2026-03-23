@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MoodSync — Relationship Settings</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/settings.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Animated Background Orbs -->
+    <div class="bg-orbs" aria-hidden="true">
+        <div class="orb orb--1"></div>
+        <div class="orb orb--2"></div>
+        <div class="orb orb--3"></div>
+        <div class="orb orb--4"></div>
+    </div>
+
+    <!-- Dissolution Banner (shown if pending) -->
+    <div class="dissolution-banner" id="dissolutionBanner" hidden>
+        <div class="container">
+            <div class="dissolution-banner__content">
+                <span class="dissolution-banner__icon">⚠️</span>
+                <div class="dissolution-banner__text">
+                    <strong>Relationship dissolution pending.</strong>
+                    <span id="dissolutionCountdown">
+                        All shared data will be deleted soon.
+                    </span>
+                </div>
+                <button class="btn btn--sm btn--ghost" id="cancelDissolutionBtn">
+                    Cancel Dissolution
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== NAVBAR ========== -->
+    <nav class="navbar">
+        <div class="container navbar__inner">
+            <a href="index.html" class="navbar__logo">
+                <span class="navbar__logo-icon">💜</span>
+                <span class="navbar__logo-text">MoodSync</span>
+            </a>
+            <ul class="navbar__links">
+                <li><a href="mood.html">Log Mood</a></li>
+                <li><a href="dashboard.html">Dashboard</a></li>
+                <li><a href="chat.html">Chat</a></li>
+                <li><a href="location.html">Location</a></li>
+                <li><a href="settings.html" class="nav-active">Settings</a></li>
+            </ul>
+            <button id="logoutBtn" class="btn btn--sm btn--glass">Log Out</button>
+            <button class="navbar__hamburger" aria-label="Toggle navigation">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ========== MAIN ========== -->
+    <main class="settings-page">
+        <div class="container">
+
+            <!-- Page header -->
+            <header class="settings-header">
+                <h1 class="settings-header__title">Relationship Settings</h1>
+                <p class="settings-header__sub">Manage your MoodSync partnership</p>
+            </header>
+
+            <!-- Relationship Info Card -->
+            <section class="settings-card glass-card">
+                <div class="settings-card__header">
+                    <span class="settings-card__icon">💑</span>
+                    <h2 class="settings-card__title">Your Relationship</h2>
+                </div>
+                <div class="settings-card__body">
+                    <div class="relationship-info">
+                        <div class="relationship-info__row">
+                            <span class="relationship-info__label">Partner:</span>
+                            <span class="relationship-info__value" id="partnerName">Loading...</span>
+                        </div>
+                        <div class="relationship-info__row">
+                            <span class="relationship-info__label">Paired Since:</span>
+                            <span class="relationship-info__value" id="pairedSince">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Privacy & Location Settings Card -->
+            <section class="settings-card glass-card">
+                <div class="settings-card__header">
+                    <span class="settings-card__icon">📍</span>
+                    <h2 class="settings-card__title">Location Sharing</h2>
+                </div>
+                <div class="settings-card__body">
+                    <div class="settings-toggle">
+                        <div class="settings-toggle__info">
+                            <h3 class="settings-toggle__title">Share Live Location</h3>
+                            <p class="settings-toggle__desc">
+                                Allow your partner to see your real-time location on the map.
+                                Your location is updated automatically while enabled.
+                            </p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="locationSharingToggle">
+                            <span class="toggle-switch__slider"></span>
+                        </label>
+                    </div>
+                    <div class="settings-info">
+                        <p class="settings-info__note">
+                            🔒 Your location is only visible to your partner and is automatically
+                            deleted after 24 hours of inactivity. You can turn off sharing anytime.
+                        </p>
+                        <a href="location.html" class="btn btn--glass btn--sm" style="margin-top: 1rem;">
+                            View Location Map →
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Danger Zone -->
+            <section class="settings-card settings-card--danger glass-card" id="dangerZone">
+                <div class="settings-card__header">
+                    <span class="settings-card__icon">⚠️</span>
+                    <h2 class="settings-card__title">Danger Zone</h2>
+                </div>
+                <div class="settings-card__body" id="dangerZoneBody">
+                    <p class="settings-danger__warning">
+                        Dissolving your relationship will permanently delete all shared data
+                        (mood logs and messages) after a 15-day grace period.
+                    </p>
+                    <button class="btn btn--danger" id="dissolveBtn">
+                        Dissolve Relationship
+                    </button>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- Dissolution Confirmation Modal -->
+    <div class="modal" id="dissolveModal" hidden>
+        <div class="modal__overlay" id="modalOverlay"></div>
+        <div class="modal__card glass-card">
+            <div class="modal__header">
+                <h2 class="modal__title">⚠️ Confirm Dissolution</h2>
+                <button class="modal__close" id="modalCloseBtn" aria-label="Close">&times;</button>
+            </div>
+            <div class="modal__body">
+                <p class="modal__warning">
+                    <strong>This is a serious action.</strong>
+                </p>
+                <p>
+                    After a 15-day grace period, the following data will be
+                    <strong>permanently deleted</strong>:
+                </p>
+                <ul class="modal__list">
+                    <li>All mood logs from this relationship</li>
+                    <li>All messages between you and your partner</li>
+                    <li>Your relationship connection</li>
+                </ul>
+                <p>
+                    <strong>Your individual account will NOT be deleted.</strong>
+                    You can pair with someone else after dissolution.
+                </p>
+                <p class="modal__note">
+                    Either partner can cancel during the 15-day grace period.
+                </p>
+
+                <!-- Typed confirmation -->
+                <div class="form-group">
+                    <label for="confirmInput" class="form-label">
+                        Type <code>dissolve relationship</code> to confirm:
+                    </label>
+                    <input
+                        type="text"
+                        id="confirmInput"
+                        class="form-input"
+                        placeholder="dissolve relationship"
+                        autocomplete="off"
+                        spellcheck="false">
+                </div>
+            </div>
+            <div class="modal__footer">
+                <button class="btn btn--ghost" id="modalCancelBtn">Cancel</button>
+                <button class="btn btn--danger" id="modalConfirmBtn" disabled>
+                    Initiate Dissolution
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== FOOTER ========== -->
+    <footer class="footer">
+        <div class="container footer__inner">
+            <div class="footer__brand">
+                <span class="navbar__logo-icon">💜</span>
+                <span class="navbar__logo-text">MoodSync</span>
+            </div>
+            <p class="footer__copy">&copy; 2026 MoodSync. Made with love for couples who care.</p>
+            <ul class="footer__links">
+                <li><a href="mood.html">Log Mood</a></li>
+                <li><a href="dashboard.html">Dashboard</a></li>
+                <li><a href="settings.html">Settings</a></li>
+            </ul>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabaseClient.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/location.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/settings.js"></script>
+
+    <!-- Prototype label -->
+    <div style="position:fixed;bottom:12px;right:16px;font-size:11px;font-family:'Inter',sans-serif;color:rgba(255,255,255,0.35);letter-spacing:0.04em;pointer-events:none;z-index:9999;">
+        Prototype V-1.0.1
+    </div>
+</body>
+</html>

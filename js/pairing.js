@@ -2,7 +2,11 @@
 //  pairing.js — Secure Partner Pairing System
 //  MoodSync · Pair-code exchange + request / accept / reject
 //
-//  Dependencies: supabaseClient.js, auth.js (must load first)
+//  Dependencies: supabaseClient.js, auth.js, data.js (must load first)
+//
+//  PHASE 1 STABILIZATION:
+//  - Proper realtime subscription cleanup via subscribeWithCleanup()
+//  - Consistent error handling
 //
 //  Flow:
 //    1. Each user gets a unique pair_code on signup (profiles table).
@@ -17,9 +21,6 @@
 //    getOutgoingRequests()      → [...requests with receiver profile]
 //    acceptPairRequest(id)      → couple row
 //    rejectPairRequest(id)      → void
-//    subscribeToPairRequests(cb)→ channel
-//
-//  Also handles pair.html DOM logic via DOMContentLoaded.
 // =============================================================
 
 "use strict";
@@ -38,47 +39,64 @@ async function getMyPairCode() {
 }
 
 /**
- * Look up a profile by pair code.
+ * Look up a profile by pair code using secure database function.
  * @param {string} code
  * @returns {Promise<Object>} profile row
  * @throws {Error} with a specific message for auth issues vs. not-found
  */
 async function findUserByPairCode(code) {
-    // --- Sanitise input ---
     const sanitised = code.trim().toLowerCase();
-    console.debug("[pairing.findUser] raw input:", JSON.stringify(code));
-    console.debug("[pairing.findUser] sanitised:", JSON.stringify(sanitised));
-
     if (!sanitised) throw new Error("Pair code is empty.");
 
-    // --- Verify session is present before querying ---
+    // Verify session is present before querying
     const sessionUser = await getUser();
-    console.debug("[pairing.findUser] session uid:", sessionUser?.id ?? "NONE — not authenticated");
     if (!sessionUser) throw new Error("You must be logged in to use a pair code.");
 
-    // --- Query ---
+    // Use the secure database function (bypasses strict RLS safely)
     const { data, error } = await supabaseClient
-        .from("profiles")
-        .select("id, name, email, pair_code")
-        .ilike("pair_code", sanitised)   // case-insensitive DB-level match
-        .maybeSingle();
-
-    console.debug("[pairing.findUser] supabase data:", data);
-    console.debug("[pairing.findUser] supabase error:", error);
+        .rpc("find_user_by_pair_code", { lookup_code: sanitised });
 
     if (error) {
-        // Distinguish RLS/auth errors from network errors
+        // Distinguish errors
         if (error.code === "PGRST301" || error.message?.includes("JWT")) {
             throw new Error("Session expired. Please log out and log back in.");
         }
+        if (error.code === "42883") {
+            // Function doesn't exist - fall back to direct query
+            return _findUserByPairCodeFallback(sanitised);
+        }
+        throw new Error("Database error: " + error.message);
+    }
+
+    // RPC returns array
+    const profile = Array.isArray(data) ? data[0] : data;
+
+    if (!profile) {
+        throw new Error("Invalid pair code. No user found.");
+    }
+
+    return profile;
+}
+
+/**
+ * Fallback: Direct profile query (for when secure function doesn't exist)
+ * @private
+ */
+async function _findUserByPairCodeFallback(code) {
+    const { data, error } = await supabaseClient
+        .from("profiles")
+        .select("id, name, email, pair_code")
+        .ilike("pair_code", code)
+        .maybeSingle();
+
+    if (error) {
         if (error.code === "42501" || error.message?.includes("policy")) {
-            throw new Error("Permission denied. RLS policy may need to be updated in Supabase — see console.");
+            throw new Error("Permission denied. Please run the RLS migration SQL.");
         }
         throw new Error("Database error: " + error.message);
     }
 
     if (!data) {
-        console.warn("[pairing.findUser] No profile found for code:", sanitised);
         throw new Error("Invalid pair code. No user found.");
     }
 
@@ -241,20 +259,6 @@ async function rejectPairRequest(requestId) {
     if (error) throw new Error("Failed to reject: " + error.message);
 }
 
-/**
- * Subscribe to realtime changes on pairing_requests.
- * @param {Function} callback
- * @returns {Object} channel (call .unsubscribe())
- */
-function subscribeToPairRequests(callback) {
-    return supabaseClient
-        .channel("pairing-updates")
-        .on("postgres_changes",
-            { event: "*", schema: "public", table: "pairing_requests" },
-            payload => callback(payload))
-        .subscribe();
-}
-
 // =============================================================
 //  pair.html Page Logic
 // =============================================================
@@ -331,17 +335,30 @@ async function _initPairPage(user) {
         });
     }
 
-    // --- Realtime subscription ---
-    subscribeToPairRequests(async () => {
-        await _renderPairRequests();
-        // If a couple now exists (partner accepted while we're on this page) → go
-        const couple = await getCouple();
-        if (couple) window.location.href = "mood.html";
-    });
+    // --- Realtime subscription (uses subscribeWithCleanup from data.js) ---
+    subscribeWithCleanup(
+        "pairing-updates",
+        { event: "*", schema: "public", table: "pairing_requests" },
+        async () => {
+            await _renderPairRequests();
+            // If a couple now exists (partner accepted while we're on this page) → go
+            const couple = await getCouple();
+            if (couple) {
+                unsubscribeAll();  // Clean up before navigation
+                window.location.href = "mood.html";
+            }
+        }
+    );
 
     // --- Logout ---
     const logoutBtn = document.getElementById("logoutBtn");
-    if (logoutBtn) logoutBtn.addEventListener("click", (e) => { e.preventDefault(); signOut(); });
+    if (logoutBtn) {
+        logoutBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            unsubscribeAll();  // Clean up subscriptions before logout
+            signOut();
+        });
+    }
 }
 
 // ---- Render incoming + outgoing ----

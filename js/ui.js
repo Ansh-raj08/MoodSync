@@ -76,3 +76,61 @@ function timeAgo(dateStr) {
     if (diff < 172800) return "yesterday";
     return Math.floor(diff / 86400) + "d ago";
 }
+
+// =============================================================
+//  Dissolution Banner (show on all coupled pages)
+// =============================================================
+
+/**
+ * Check dissolution status and show banner if pending.
+ * Call this in every page's DOMContentLoaded after requireCouple().
+ */
+async function checkAndShowDissolutionBanner() {
+    // Check if getDissolveStatus is available (from data.js)
+    if (typeof getDissolveStatus !== "function") {
+        console.warn("[ui] getDissolveStatus not available");
+        return;
+    }
+
+    const status = await getDissolveStatus();
+    if (!status?.isPending) return;
+
+    const banner = document.getElementById("dissolutionBanner");
+    const countdown = document.getElementById("dissolutionCountdown");
+    const cancelBtn = document.getElementById("cancelDissolutionBtn");
+
+    if (!banner) return; // Banner not on this page
+
+    // Update countdown text
+    const days = status.daysRemaining;
+    if (countdown) {
+        countdown.textContent = days === 1
+            ? "All shared data will be deleted tomorrow."
+            : `All shared data will be deleted in ${days} days.`;
+    }
+
+    // Show banner
+    banner.hidden = false;
+
+    // Wire up cancel button (if present)
+    if (cancelBtn) {
+        cancelBtn.addEventListener("click", async () => {
+            if (!confirm("Are you sure you want to cancel the dissolution and keep your relationship?")) return;
+
+            cancelBtn.disabled = true;
+            cancelBtn.textContent = "Cancelling...";
+
+            try {
+                await cancelDissolve();
+                banner.hidden = true;
+                showToast("Dissolution cancelled successfully!", "success");
+                setTimeout(() => window.location.reload(), 1000);
+            } catch (err) {
+                console.error("[ui] Cancel dissolution failed:", err);
+                alert("Failed to cancel:\n" + err.message);
+                cancelBtn.disabled = false;
+                cancelBtn.textContent = "Cancel Dissolution";
+            }
+        });
+    }
+}

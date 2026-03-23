@@ -20,6 +20,24 @@
         <div class="orb orb--4"></div>
     </div>
 
+    <!-- Dissolution Banner (shown if pending) -->
+    <div class="dissolution-banner" id="dissolutionBanner" hidden>
+        <div class="container">
+            <div class="dissolution-banner__content">
+                <span class="dissolution-banner__icon">⚠️</span>
+                <div class="dissolution-banner__text">
+                    <strong>Relationship dissolution pending.</strong>
+                    <span id="dissolutionCountdown">
+                        All shared data will be deleted soon.
+                    </span>
+                </div>
+                <button class="btn btn--sm btn--ghost" id="cancelDissolutionBtn">
+                    Cancel Dissolution
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- ========== NAVBAR ========== -->
     <nav class="navbar">
         <div class="container navbar__inner">
@@ -31,7 +49,8 @@
                 <li><a href="mood.html" class="nav-active">Log Mood</a></li>
                 <li><a href="dashboard.html">Dashboard</a></li>
                 <li><a href="chat.html">Chat</a></li>
-                <li><a href="pair.html">Pairing</a></li>
+                <li><a href="location.html">Location</a></li>
+                <li><a href="settings.html">Settings</a></li>
             </ul>
             <button id="logoutBtn" class="btn btn--sm btn--glass">Log Out</button>
             <button class="navbar__hamburger" aria-label="Toggle navigation">
@@ -164,6 +183,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabaseClient.js"></script>
     <script src="js/auth.js"></script>
+    <script src="js/data.js"></script>
     <script src="js/ui.js"></script>
     <script src="js/main.js"></script>
     <script src="js/mood.js"></script>

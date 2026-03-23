@@ -695,3 +695,136 @@
     cursor: default;
 }
 
+/* =============================================================
+   Premium Graph Enhancements (Apple Health-inspired)
+   ============================================================= */
+
+/* Graph card premium styling */
+.dash-card--graph {
+    background: linear-gradient(
+        145deg,
+        rgba(255, 255, 255, 0.08) 0%,
+        rgba(255, 255, 255, 0.04) 50%,
+        rgba(255, 255, 255, 0.06) 100%
+    );
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.2),
+        0 0 40px rgba(201, 140, 245, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    transition: box-shadow 0.4s ease, transform 0.3s ease;
+}
+
+.dash-card--graph:hover {
+    box-shadow:
+        0 12px 48px rgba(0, 0, 0, 0.25),
+        0 0 60px rgba(201, 140, 245, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    transform: translateY(-2px);
+}
+
+/* Canvas wrapper with glow effect */
+.graph-wrap {
+    position: relative;
+    height: 260px;
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+/* Subtle glow behind the canvas */
+.graph-wrap::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+        ellipse 80% 50% at 50% 80%,
+        rgba(201, 140, 245, 0.08) 0%,
+        transparent 70%
+    );
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Canvas styling */
+.graph-wrap canvas {
+    position: relative;
+    z-index: 1;
+    transition: filter 0.3s ease;
+}
+
+/* Enhanced legend dots with pulsing glow */
+.graph-legend__dot--me {
+    background: #c98cf5;
+    box-shadow:
+        0 0 8px rgba(201, 140, 245, 0.7),
+        0 0 16px rgba(201, 140, 245, 0.4);
+    animation: legendPulse 3s ease-in-out infinite;
+}
+
+.graph-legend__dot--partner {
+    background: #f7a0be;
+    box-shadow:
+        0 0 8px rgba(247, 160, 190, 0.7),
+        0 0 16px rgba(247, 160, 190, 0.4);
+    animation: legendPulse 3s ease-in-out infinite 1.5s;
+}
+
+@keyframes legendPulse {
+    0%, 100% {
+        box-shadow:
+            0 0 8px rgba(201, 140, 245, 0.7),
+            0 0 16px rgba(201, 140, 245, 0.4);
+    }
+    50% {
+        box-shadow:
+            0 0 12px rgba(201, 140, 245, 0.9),
+            0 0 24px rgba(201, 140, 245, 0.5);
+    }
+}
+
+/* Graph title enhancement */
+.dash-card--graph .dash-card__title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    background: linear-gradient(
+        135deg,
+        var(--clr-text-primary) 0%,
+        rgba(255, 255, 255, 0.85) 100%
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Responsive adjustments */
+@media (max-width: 700px) {
+    .graph-wrap {
+        height: 220px;
+    }
+
+    .graph-wrap::before {
+        background: radial-gradient(
+            ellipse 90% 60% at 50% 85%,
+            rgba(201, 140, 245, 0.06) 0%,
+            transparent 70%
+        );
+    }
+}
+
+/* Smooth fade-in for graph card on load */
+@keyframes graphCardIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.dash-card--graph {
+    animation: graphCardIn 0.6s cubic-bezier(0.25, 0.1, 0.25, 1) 0.2s both;
+}
+

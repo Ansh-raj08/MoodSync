@@ -2,7 +2,11 @@
 //  mood.js — Daily Mood Logging
 //  MoodSync · Mood selection, notes, Supabase persistence
 //
-//  Dependencies: supabaseClient.js, auth.js
+//  Dependencies: supabaseClient.js, auth.js, data.js
+//
+//  PHASE 1 STABILIZATION:
+//  - Uses subscribeWithCleanup for realtime subscriptions
+//  - Consistent error handling
 //
 //  Mood scale (5 anchor points on a 1–9 range):
 //    1 = Very Bad · 3 = Bad · 5 = Neutral · 7 = Good · 9 = Great
@@ -11,7 +15,6 @@
 //    saveMood(score, note?)      → mood_logs row
 //    getMoodHistory(userId, days?) → sorted array
 //    getTodayMood()              → row | null
-//    subscribeToMoodUpdates(cb)  → channel
 //
 //  Also handles mood.html DOM logic via DOMContentLoaded.
 // =============================================================
@@ -54,12 +57,17 @@ async function saveMood(score, note = "") {
     const user = await getUser();
     if (!user) throw new Error("Not authenticated.");
 
+    // Get current couple (required for relationship-scoped data)
+    const couple = await getCouple();
+    if (!couple) throw new Error("You must be paired to log mood.");
+
     const clamped = Math.max(1, Math.min(9, Math.round(score)));
 
     const { data, error } = await supabaseClient
         .from("mood_logs")
         .insert({
             user_id: user.id,
+            couple_id: couple.id,  // CRITICAL: Relationship-scoped for safe deletion
             score:   clamped,
             note:    note.trim() || null,
         })
@@ -125,21 +133,6 @@ async function getTodayMood() {
     return { date: data[0].logged_at.slice(0, 10), score: data[0].score, note: data[0].note };
 }
 
-/**
- * Subscribe to realtime INSERT events on mood_logs.
- * Used by dashboard to auto-refresh when partner logs.
- * @param {Function} callback
- * @returns {Object} channel
- */
-function subscribeToMoodUpdates(callback) {
-    return supabaseClient
-        .channel("mood-updates")
-        .on("postgres_changes",
-            { event: "INSERT", schema: "public", table: "mood_logs" },
-            payload => callback(payload))
-        .subscribe();
-}
-
 // =============================================================
 //  mood.html Page Logic
 // =============================================================
@@ -153,6 +146,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!ctx) return;
 
     await _initMoodPage(ctx.user);
+
+    // Check and show dissolution banner if pending
+    if (typeof checkAndShowDissolutionBanner === "function") {
+        await checkAndShowDissolutionBanner();
+    }
 });
 
 async function _initMoodPage(user) {
@@ -183,6 +181,11 @@ async function _initMoodPage(user) {
             document.querySelectorAll(".mood-option").forEach(o => o.classList.remove("mood-option--active"));
             radio.closest(".mood-option").classList.add("mood-option--active");
         });
+
+        // Also handle click events for reliability
+        radio.addEventListener("click", () => {
+            selectedScore = parseInt(radio.value, 10);
+        });
     });
 
     // Character counter
@@ -199,17 +202,29 @@ async function _initMoodPage(user) {
     if (form) {
         form.addEventListener("submit", async (e) => {
             e.preventDefault();
-            if (!selectedScore) { alert("Please select a mood first."); return; }
+
+            // Check DOM state directly for reliability
+            const checkedRadio = form.querySelector("input[name='mood']:checked");
+            if (!checkedRadio) {
+                alert("Please select a mood first.");
+                return;
+            }
+
+            const score = parseInt(checkedRadio.value, 10);
+            if (!score || score < 1 || score > 9) {
+                alert("Please select a valid mood.");
+                return;
+            }
 
             submitBtn.disabled  = true;
             submitBtn.innerHTML = '<span class="btn__icon">⏳</span> Saving…';
 
             try {
                 const note = noteInput ? noteInput.value.trim() : "";
-                await saveMood(selectedScore, note);
+                await saveMood(score, note);
 
-                const info = MOOD_MAP[selectedScore] || MOOD_MAP[5];
-                _showMoodSuccess(selectedScore, info);
+                const info = MOOD_MAP[score] || MOOD_MAP[5];
+                _showMoodSuccess(score, info);
             } catch (err) {
                 console.error("[mood] Save failed:", err.message);
                 submitBtn.disabled  = false;
@@ -219,9 +234,15 @@ async function _initMoodPage(user) {
         });
     }
 
-    // Logout
+    // Logout - clean up subscriptions before signing out
     const logoutBtn = document.getElementById("logoutBtn");
-    if (logoutBtn) logoutBtn.addEventListener("click", (e) => { e.preventDefault(); signOut(); });
+    if (logoutBtn) {
+        logoutBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            unsubscribeAll();
+            signOut();
+        });
+    }
 }
 
 function _showAlreadyLogged(mood) {

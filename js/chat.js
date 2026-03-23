@@ -2,16 +2,21 @@
 //  chat.js — Partner-to-Partner Messaging
 //  MoodSync · Realtime chat between paired users
 //
-//  Dependencies: supabaseClient.js, auth.js
+//  Dependencies: supabaseClient.js, auth.js, data.js
 //
-//  Fixes in this version:
+//  PHASE 1 STABILIZATION:
+//  - No localStorage (all data from Supabase)
+//  - Uses centralized getPartnerData() from data.js
+//  - Proper realtime subscription cleanup via subscribeWithCleanup()
+//  - Consistent error handling
+//
+//  Features:
 //    1. MESSAGE INSERT   — pre-flight checks, full Supabase error logging
-//    2. PARTNER NAME     — 3-layer fallback (profile → pairing_requests → localStorage)
+//    2. PARTNER NAME     — via getPartnerData() (no localStorage)
 //    3. IMESSAGE ANIM    — spring bubbleIn + Sending… → ✓ Delivered → ⚠ Tap to retry
 //    4. RETRY LOGIC      — failed bubbles store retry text; one tap re-sends
 //    5. DUPLICATES       — Set of rendered IDs prevents double-render from realtime
 //    6. VALIDATION       — trim, max 500 chars enforced client-side
-//    7. DEBUG LOGGING    — sender_id, receiver_id, message, full Supabase error printed
 // =============================================================
 
 "use strict";
@@ -21,10 +26,10 @@ const CHAT_MAX_CHARS  = 500;
 
 // ---- Module-level state ---- //
 let _user         = null;   // current auth user
+let _couple       = null;   // current couple relationship
 let _partnerId    = null;   // partner's user id
 let _myName       = "You";
 let _partnerName  = "Your Partner";
-let _channel      = null;   // realtime channel handle
 let _oldestTs     = null;   // ISO string; cursor for "load older" pagination
 let _loadingOlder = false;
 
@@ -43,12 +48,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!ctx) return;
 
     _user      = ctx.user;
+    _couple    = ctx.couple;
     _partnerId = getPartnerId(ctx.couple, ctx.user.id);
-
-    // ---- Critical pre-flight ----
-    console.log("[chat] user.id    :", _user?.id);
-    console.log("[chat] partnerId  :", _partnerId);
-    console.log("[chat] couple.id  :", ctx.couple?.id);
 
     if (!_user?.id || !_partnerId) {
         console.error("[chat] user or partnerId is null — aborting boot.");
@@ -56,31 +57,14 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
     }
 
-    // ---- Resolve display names (3-layer fallback) ----
-    const cacheKey = `ms_partner_${ctx.couple.id}`;
-    const [uProfile, pProfile] = await Promise.all([
+    // ---- Resolve display names via getPartnerData() — NO localStorage ----
+    const [uProfile, partnerData] = await Promise.all([
         getProfile(_user.id),
-        getProfile(_partnerId),
+        getPartnerData(),
     ]);
 
     _myName      = uProfile?.name || _user.user_metadata?.name || "You";
-    _partnerName = pProfile?.name || null;
-
-    if (!_partnerName) {
-        // Layer 2: pairing_requests join (works even when profiles RLS is strict)
-        _partnerName = await _fetchPartnerNameViaRequest(_user.id, _partnerId);
-        console.log("[chat] partner name via pairing_requests:", _partnerName);
-    } else {
-        try { localStorage.setItem(cacheKey, _partnerName); } catch (_) {}
-    }
-
-    if (!_partnerName) {
-        // Layer 3: localStorage cache
-        try { _partnerName = localStorage.getItem(cacheKey); } catch (_) {}
-        console.log("[chat] partner name from cache:", _partnerName);
-    }
-
-    _partnerName = _partnerName || "Your Partner";
+    _partnerName = partnerData?.partnerName || "Your Partner";
 
     // ---- Update top bar ----
     const partnerNameEl = document.getElementById("partnerName");
@@ -120,7 +104,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("logoutBtn")
         ?.addEventListener("click", (e) => {
             e.preventDefault();
-            if (_channel) supabaseClient.removeChannel(_channel);
+            unsubscribeAll();  // Clean up all subscriptions before logout
             signOut();
         });
 
@@ -128,31 +112,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     await _loadRecentMessages();
     _subscribeRealtime();
 });
-
-// =============================================================
-//  Partner name — pairing_requests join fallback
-//  (Required when profiles RLS blocks direct partner lookup)
-// =============================================================
-
-async function _fetchPartnerNameViaRequest(userId, partnerId) {
-    const { data } = await supabaseClient
-        .from("pairing_requests")
-        .select(
-            "sender_id, receiver_id," +
-            "sp:profiles!pairing_requests_sender_id_fkey(name)," +
-            "rp:profiles!pairing_requests_receiver_id_fkey(name)"
-        )
-        .eq("status", "accepted")
-        .or(
-            `and(sender_id.eq.${userId},receiver_id.eq.${partnerId}),` +
-            `and(sender_id.eq.${partnerId},receiver_id.eq.${userId})`
-        )
-        .limit(1)
-        .maybeSingle();
-
-    if (!data) return null;
-    return (data.sender_id === partnerId ? data.sp?.name : data.rp?.name) || null;
-}
 
 // =============================================================
 //  Supabase queries
@@ -186,17 +145,15 @@ async function _fetchMessages({ before = null } = {}) {
 
 /**
  * Insert a new message row. Returns the confirmed row from DB.
- * Logs full Supabase error on failure so the root cause is visible in DevTools.
  */
 async function _insertMessage(text) {
     const payload = {
         sender_id:    _user.id,
         receiver_id:  _partnerId,
+        couple_id:    _couple.id,  // CRITICAL: Relationship-scoped for safe deletion
         message:      text,
         delivered_at: new Date().toISOString(),
     };
-
-    console.log("[chat] INSERT payload →", payload);
 
     const { data, error } = await supabaseClient
         .from("messages")
@@ -205,15 +162,10 @@ async function _insertMessage(text) {
         .single();
 
     if (error) {
-        console.error("[chat] INSERT failed:");
-        console.error("  code    :", error.code);
-        console.error("  message :", error.message);
-        console.error("  hint    :", error.hint);
-        console.error("  details :", error.details);
+        console.error("[chat] INSERT failed:", error.code, error.message);
         throw new Error(`[${error.code}] ${error.message}`);
     }
 
-    console.log("[chat] INSERT success id:", data?.id);
     return data;
 }
 
@@ -601,52 +553,50 @@ async function _deleteMessage(messageId, rowEl) {
 }
 
 // =============================================================
-//  Realtime subscription
+//  Realtime subscription (uses subscribeWithCleanup from data.js)
 // =============================================================
 
 function _subscribeRealtime() {
     // Channel name is order-independent so both users join the same channel
     const pairKey = [_user.id, _partnerId].sort().join("_");
 
-    _channel = supabaseClient
-        .channel(`chat_${pairKey}`)
-        .on(
-            "postgres_changes",
-            { event: "INSERT", schema: "public", table: "messages" },
-            (payload) => {
-                const row = payload.new;
+    // Subscribe to INSERT events
+    subscribeWithCleanup(
+        `chat_insert_${pairKey}`,
+        { event: "INSERT", schema: "public", table: "messages" },
+        (payload) => {
+            const row = payload.new;
 
-                const ours =
-                    (row.sender_id === _user.id   && row.receiver_id === _partnerId) ||
-                    (row.sender_id === _partnerId && row.receiver_id === _user.id);
+            const ours =
+                (row.sender_id === _user.id   && row.receiver_id === _partnerId) ||
+                (row.sender_id === _partnerId && row.receiver_id === _user.id);
 
-                if (!ours) return;
+            if (!ours) return;
 
-                _appendMessage(row, "bottom");
+            _appendMessage(row, "bottom");
 
-                // If partner sent this, mark it as seen immediately
-                if (row.sender_id === _partnerId) {
-                    _markMessagesAsSeen();
-                }
+            // If partner sent this, mark it as seen immediately
+            if (row.sender_id === _partnerId) {
+                _markMessagesAsSeen();
             }
-        )
-        .on(
-            "postgres_changes",
-            { event: "UPDATE", schema: "public", table: "messages" },
-            (payload) => {
-                const row = payload.new;
+        }
+    );
 
-                const ours =
-                    (row.sender_id === _user.id   && row.receiver_id === _partnerId) ||
-                    (row.sender_id === _partnerId && row.receiver_id === _user.id);
+    // Subscribe to UPDATE events
+    subscribeWithCleanup(
+        `chat_update_${pairKey}`,
+        { event: "UPDATE", schema: "public", table: "messages" },
+        (payload) => {
+            const row = payload.new;
 
-                if (!ours) return;
-                _updateMessageInDom(row);
-            }
-        )
-        .subscribe((status) => {
-            console.log("[chat] Realtime channel:", status);
-        });
+            const ours =
+                (row.sender_id === _user.id   && row.receiver_id === _partnerId) ||
+                (row.sender_id === _partnerId && row.receiver_id === _user.id);
+
+            if (!ours) return;
+            _updateMessageInDom(row);
+        }
+    );
 }
 
 // =============================================================

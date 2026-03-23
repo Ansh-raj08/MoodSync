@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MoodSync — Live Location</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        .location-page {
+            padding: 2rem 0 4rem;
+            min-height: 100vh;
+        }
+
+        .location-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .location-controls {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        .map-container {
+            position: relative;
+            border-radius: 20px;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+            margin-bottom: 1.5rem;
+        }
+
+        #map {
+            width: 100%;
+            height: 500px;
+            border-radius: 20px;
+        }
+
+        .location-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .location-card {
+            padding: 1.5rem;
+            position: relative;
+        }
+
+        .location-card__header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .location-card__icon {
+            font-size: 1.75rem;
+        }
+
+        .location-card__title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+            margin: 0;
+        }
+
+        .location-card__body {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .location-stat {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .location-stat:last-child {
+            border-bottom: none;
+        }
+
+        .location-stat__label {
+            font-size: 0.875rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .location-stat__value {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.95);
+        }
+
+        .location-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 100px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .location-status--active {
+            background: rgba(0, 255, 136, 0.1);
+            color: #00ff88;
+        }
+
+        .location-status--inactive {
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .location-status__dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: currentColor;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .distance-display {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            background: linear-gradient(135deg, rgba(201, 140, 245, 0.1), rgba(247, 160, 190, 0.1));
+            border-radius: 16px;
+            margin-bottom: 1.5rem;
+        }
+
+        .distance-display__value {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #c98cf5, #f7a0be);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .distance-display__label {
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .permission-banner {
+            background: rgba(255, 193, 7, 0.1);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .permission-banner__icon {
+            font-size: 1.5rem;
+        }
+
+        .permission-banner__text {
+            flex: 1;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .tracking-indicator {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 0.75rem 1.25rem;
+            border-radius: 100px;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.85rem;
+            color: #00ff88;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+        }
+
+        .tracking-indicator__dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #00ff88;
+            animation: pulse 1.5s infinite;
+        }
+
+        @media (max-width: 768px) {
+            #map {
+                height: 400px;
+            }
+
+            .distance-display__value {
+                font-size: 2.5rem;
+            }
+
+            .tracking-indicator {
+                bottom: 1rem;
+                right: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Animated Background Orbs -->
+    <div class="bg-orbs" aria-hidden="true">
+        <div class="orb orb--1"></div>
+        <div class="orb orb--2"></div>
+        <div class="orb orb--3"></div>
+        <div class="orb orb--4"></div>
+    </div>
+
+    <!-- ========== NAVBAR ========== -->
+    <nav class="navbar">
+        <div class="container navbar__inner">
+            <a href="index.html" class="navbar__logo">
+                <span class="navbar__logo-icon">💜</span>
+                <span class="navbar__logo-text">MoodSync</span>
+            </a>
+            <ul class="navbar__links">
+                <li><a href="mood.html">Log Mood</a></li>
+                <li><a href="dashboard.html">Dashboard</a></li>
+                <li><a href="chat.html">Chat</a></li>
+                <li><a href="location.html" class="nav-active">Location</a></li>
+                <li><a href="settings.html">Settings</a></li>
+            </ul>
+            <button id="logoutBtn" class="btn btn--sm btn--glass">Log Out</button>
+            <button class="navbar__hamburger" aria-label="Toggle navigation">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ========== MAIN ========== -->
+    <main class="location-page">
+        <div class="container">
+
+            <!-- Page Header -->
+            <header class="location-header">
+                <div>
+                    <p class="dash-header__label">Live Location</p>
+                    <h1 class="dash-header__title" id="pageTitle">Location Sharing</h1>
+                    <p class="dash-header__sub" id="pageSubtitle">See where you and your partner are</p>
+                </div>
+                <div class="location-controls">
+                    <button class="btn btn--ghost btn--sm" id="refreshBtn">
+                        <span>🔄</span> Refresh
+                    </button>
+                    <button class="btn btn--glass btn--md" id="toggleTrackingBtn">
+                        Enable Tracking
+                    </button>
+                </div>
+            </header>
+
+            <!-- Permission Banner (shown if location permission not granted) -->
+            <div class="permission-banner" id="permissionBanner" hidden>
+                <span class="permission-banner__icon">⚠️</span>
+                <div class="permission-banner__text">
+                    <strong>Location access required.</strong> Please enable location permissions in your browser to share your location with your partner.
+                </div>
+                <button class="btn btn--sm btn--glass" id="requestPermissionBtn">Enable</button>
+            </div>
+
+            <!-- Distance Display -->
+            <div class="distance-display" id="distanceDisplay" hidden>
+                <div class="distance-display__value" id="distanceValue">—</div>
+                <div class="distance-display__label">Distance from your partner</div>
+            </div>
+
+            <!-- Map -->
+            <div class="map-container">
+                <div id="map"></div>
+            </div>
+
+            <!-- Location Info Grid -->
+            <div class="location-info-grid">
+
+                <!-- Your Location Card -->
+                <article class="location-card glass-card">
+                    <div class="location-card__header">
+                        <span class="location-card__icon">📍</span>
+                        <h2 class="location-card__title" id="myLocationTitle">Your Location</h2>
+                    </div>
+                    <div class="location-card__body">
+                        <div class="location-stat">
+                            <span class="location-stat__label">Status</span>
+                            <span class="location-status location-status--inactive" id="myStatus">
+                                <span class="location-status__dot"></span>
+                                Not Sharing
+                            </span>
+                        </div>
+                        <div class="location-stat">
+                            <span class="location-stat__label">Accuracy</span>
+                            <span class="location-stat__value" id="myAccuracy">—</span>
+                        </div>
+                        <div class="location-stat">
+                            <span class="location-stat__label">Last Updated</span>
+                            <span class="location-stat__value" id="myLastUpdate">—</span>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- Partner's Location Card -->
+                <article class="location-card glass-card">
+                    <div class="location-card__header">
+                        <span class="location-card__icon">💜</span>
+                        <h2 class="location-card__title" id="partnerLocationTitle">Partner's Location</h2>
+                    </div>
+                    <div class="location-card__body">
+                        <div class="location-stat">
+                            <span class="location-stat__label">Status</span>
+                            <span class="location-status location-status--inactive" id="partnerStatus">
+                                <span class="location-status__dot"></span>
+                                Not Sharing
+                            </span>
+                        </div>
+                        <div class="location-stat">
+                            <span class="location-stat__label">Accuracy</span>
+                            <span class="location-stat__value" id="partnerAccuracy">—</span>
+                        </div>
+                        <div class="location-stat">
+                            <span class="location-stat__label">Last Updated</span>
+                            <span class="location-stat__value" id="partnerLastUpdate">—</span>
+                        </div>
+                    </div>
+                </article>
+
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Tracking Indicator (shown when actively tracking) -->
+    <div class="tracking-indicator" id="trackingIndicator" hidden>
+        <span class="tracking-indicator__dot"></span>
+        <span>Location tracking active</span>
+    </div>
+
+    <!-- ========== FOOTER ========== -->
+    <footer class="footer">
+        <div class="container footer__inner">
+            <div class="footer__brand">
+                <span class="navbar__logo-icon">💜</span>
+                <span class="navbar__logo-text">MoodSync</span>
+            </div>
+            <p class="footer__copy">&copy; 2026 MoodSync. Made with love for couples who care.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="js/supabaseClient.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/location.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        // =============================================================
+        //  location.html Page Logic
+        // =============================================================
+
+        let map = null;
+        let myMarker = null;
+        let partnerMarker = null;
+        let trackingId = null;
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            // Auth guard + couple guard
+            const ctx = await requireCouple();
+            if (!ctx) return;
+
+            await initLocationPage(ctx.user);
+        });
+
+        async function initLocationPage(user) {
+            const coupleData = await getCoupleData();
+            if (!coupleData) {
+                window.location.replace("pair.html");
+                return;
+            }
+
+            // Set partner name in title
+            document.getElementById("partnerLocationTitle").textContent = `${coupleData.partnerName}'s Location`;
+
+            // Initialize map
+            initMap();
+
+            // Load initial location data
+            await refreshLocationData();
+
+            // Set up event listeners
+            setupEventListeners();
+
+            // Subscribe to partner location updates
+            subscribeToPartnerLocation(async () => {
+                await refreshLocationData();
+            });
+
+            // Check if tracking should be auto-enabled
+            const isEnabled = await isLocationSharingEnabled();
+            if (isEnabled) {
+                startTracking();
+            }
+        }
+
+        function initMap() {
+            // Default center (will be updated with actual location)
+            map = L.map('map').setView([0, 0], 2);
+
+            // Use OpenStreetMap tiles (free)
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors',
+                maxZoom: 19
+            }).addTo(map);
+        }
+
+        async function refreshLocationData() {
+            try {
+                // Get both locations
+                const [myLoc, partnerLoc] = await Promise.all([
+                    getMyLocation(),
+                    getPartnerLocation()
+                ]);
+
+                // Update UI
+                updateMyLocationUI(myLoc);
+                updatePartnerLocationUI(partnerLoc);
+
+                // Update map
+                updateMap(myLoc, partnerLoc);
+
+                // Calculate and display distance
+                if (myLoc && partnerLoc) {
+                    const distance = calculateDistance(myLoc, partnerLoc);
+                    updateDistanceDisplay(distance);
+                } else {
+                    document.getElementById("distanceDisplay").hidden = true;
+                }
+
+            } catch (err) {
+                console.error("[location.refresh]", err.message);
+            }
+        }
+
+        function updateMyLocationUI(location) {
+            const statusEl = document.getElementById("myStatus");
+            const accuracyEl = document.getElementById("myAccuracy");
+            const lastUpdateEl = document.getElementById("myLastUpdate");
+
+            if (location && location.sharing_enabled) {
+                statusEl.className = "location-status location-status--active";
+                statusEl.innerHTML = '<span class="location-status__dot"></span> Sharing';
+                accuracyEl.textContent = location.accuracy ? `${Math.round(location.accuracy)}m` : "—";
+                lastUpdateEl.textContent = getTimeSinceUpdate(location.updated_at);
+            } else {
+                statusEl.className = "location-status location-status--inactive";
+                statusEl.innerHTML = '<span class="location-status__dot"></span> Not Sharing';
+                accuracyEl.textContent = "—";
+                lastUpdateEl.textContent = "—";
+            }
+        }
+
+        function updatePartnerLocationUI(location) {
+            const statusEl = document.getElementById("partnerStatus");
+            const accuracyEl = document.getElementById("partnerAccuracy");
+            const lastUpdateEl = document.getElementById("partnerLastUpdate");
+
+            if (location) {
+                statusEl.className = "location-status location-status--active";
+                statusEl.innerHTML = '<span class="location-status__dot"></span> Sharing';
+                accuracyEl.textContent = location.accuracy ? `${Math.round(location.accuracy)}m` : "—";
+                lastUpdateEl.textContent = getTimeSinceUpdate(location.updated_at);
+            } else {
+                statusEl.className = "location-status location-status--inactive";
+                statusEl.innerHTML = '<span class="location-status__dot"></span> Not Sharing';
+                accuracyEl.textContent = "—";
+                lastUpdateEl.textContent = "—";
+            }
+        }
+
+        function updateMap(myLoc, partnerLoc) {
+            // Remove existing markers
+            if (myMarker) map.removeLayer(myMarker);
+            if (partnerMarker) map.removeLayer(partnerMarker);
+
+            const bounds = [];
+
+            // Add my location marker
+            if (myLoc && myLoc.sharing_enabled) {
+                const myIcon = L.divIcon({
+                    className: 'custom-marker',
+                    html: '<div style="background: #c98cf5; width: 24px; height: 24px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);"></div>',
+                    iconSize: [24, 24],
+                    iconAnchor: [12, 12]
+                });
+
+                myMarker = L.marker([myLoc.latitude, myLoc.longitude], { icon: myIcon })
+                    .addTo(map)
+                    .bindPopup("📍 Your Location");
+
+                bounds.push([myLoc.latitude, myLoc.longitude]);
+            }
+
+            // Add partner location marker
+            if (partnerLoc) {
+                const partnerIcon = L.divIcon({
+                    className: 'custom-marker',
+                    html: '<div style="background: #f7a0be; width: 24px; height: 24px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);"></div>',
+                    iconSize: [24, 24],
+                    iconAnchor: [12, 12]
+                });
+
+                partnerMarker = L.marker([partnerLoc.latitude, partnerLoc.longitude], { icon: partnerIcon })
+                    .addTo(map)
+                    .bindPopup("💜 Partner's Location");
+
+                bounds.push([partnerLoc.latitude, partnerLoc.longitude]);
+            }
+
+            // Fit map to show both markers (or center on available marker)
+            if (bounds.length === 2) {
+                map.fitBounds(bounds, { padding: [50, 50] });
+            } else if (bounds.length === 1) {
+                map.setView(bounds[0], 13);
+            }
+        }
+
+        function updateDistanceDisplay(distance) {
+            const displayEl = document.getElementById("distanceDisplay");
+            const valueEl = document.getElementById("distanceValue");
+
+            if (distance !== null) {
+                displayEl.hidden = false;
+                valueEl.textContent = formatDistance(distance);
+            } else {
+                displayEl.hidden = true;
+            }
+        }
+
+        function setupEventListeners() {
+            // Toggle tracking button
+            const toggleBtn = document.getElementById("toggleTrackingBtn");
+            toggleBtn.addEventListener("click", async () => {
+                if (trackingId) {
+                    stopTracking();
+                } else {
+                    await startTracking();
+                }
+            });
+
+            // Refresh button
+            const refreshBtn = document.getElementById("refreshBtn");
+            refreshBtn.addEventListener("click", async () => {
+                refreshBtn.disabled = true;
+                refreshBtn.innerHTML = '<span>⏳</span> Refreshing...';
+                await refreshLocationData();
+                refreshBtn.disabled = false;
+                refreshBtn.innerHTML = '<span>🔄</span> Refresh';
+            });
+
+            // Request permission button
+            const permissionBtn = document.getElementById("requestPermissionBtn");
+            if (permissionBtn) {
+                permissionBtn.addEventListener("click", async () => {
+                    await startTracking();
+                });
+            }
+
+            // Logout
+            const logoutBtn = document.getElementById("logoutBtn");
+            if (logoutBtn) {
+                logoutBtn.addEventListener("click", (e) => {
+                    e.preventDefault();
+                    if (trackingId) stopTracking();
+                    unsubscribeAll();
+                    signOut();
+                });
+            }
+        }
+
+        async function startTracking() {
+            try {
+                // Check geolocation support
+                if (!isGeolocationSupported()) {
+                    alert("Your browser doesn't support geolocation.");
+                    return;
+                }
+
+                // Get initial location to trigger permission prompt
+                const position = await getCurrentLocation();
+
+                // Save location to database
+                await updateMyLocation(position.latitude, position.longitude, position.accuracy, true);
+
+                // Start automatic tracking (update every 2 minutes)
+                trackingId = startLocationTracking(
+                    120000, // 2 minutes
+                    async () => {
+                        await refreshLocationData();
+                    },
+                    (error) => {
+                        console.error("[tracking]", error);
+                    }
+                );
+
+                // Update UI
+                document.getElementById("toggleTrackingBtn").textContent = "Stop Tracking";
+                document.getElementById("toggleTrackingBtn").classList.remove("btn--glass");
+                document.getElementById("toggleTrackingBtn").classList.add("btn--ghost");
+                document.getElementById("trackingIndicator").hidden = false;
+                document.getElementById("permissionBanner").hidden = true;
+
+                // Refresh display
+                await refreshLocationData();
+
+            } catch (err) {
+                console.error("[startTracking]", err.message);
+
+                // Show permission banner if access denied
+                if (err.message.includes("permission")) {
+                    document.getElementById("permissionBanner").hidden = false;
+                } else {
+                    alert(err.message);
+                }
+            }
+        }
+
+        function stopTracking() {
+            if (trackingId) {
+                stopLocationTracking(trackingId);
+                trackingId = null;
+            }
+
+            // Update UI
+            document.getElementById("toggleTrackingBtn").textContent = "Enable Tracking";
+            document.getElementById("toggleTrackingBtn").classList.add("btn--glass");
+            document.getElementById("toggleTrackingBtn").classList.remove("btn--ghost");
+            document.getElementById("trackingIndicator").hidden = true;
+
+            // Disable sharing in database
+            toggleLocationSharing(false).catch(err => {
+                console.error("[stopTracking]", err.message);
+            });
+        }
+
+        // Auto-refresh every 30 seconds when page is active
+        let autoRefreshInterval = setInterval(() => {
+            if (!document.hidden) {
+                refreshLocationData();
+            }
+        }, 30000);
+
+        // Cleanup on page unload
+        window.addEventListener("beforeunload", () => {
+            if (trackingId) stopTracking();
+            clearInterval(autoRefreshInterval);
+        });
+    </script>
+
+    <!-- Prototype label -->
+    <div style="position:fixed;bottom:12px;right:16px;font-size:11px;font-family:'Inter',sans-serif;color:rgba(255,255,255,0.35);letter-spacing:0.04em;pointer-events:none;z-index:9999;">
+        Prototype V-1.0.0
+    </div>
+</body>
+</html>

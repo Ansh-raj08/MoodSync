@@ -170,7 +170,7 @@ async function requireAuth() {
 /**
  * Require auth + an active couple.
  * Redirects to pair.html if not paired.
- * @returns {Promise<{user: Object, couple: Object}|null>}
+ * @returns {Promise<{user: Object, couple: Object, dissolutionStatus: Object}|null>}
  */
 async function requireCouple() {
     const user = await requireAuth();
@@ -179,7 +179,17 @@ async function requireCouple() {
     const couple = await getCouple();
     if (!couple) { window.location.replace("pair.html"); return null; }
 
-    return { user, couple };
+    // Check dissolution status (from data.js)
+    let dissolutionStatus = null;
+    if (typeof getDissolveStatus === "function") {
+        try {
+            dissolutionStatus = await getDissolveStatus();
+        } catch (err) {
+            console.warn("[auth] Could not fetch dissolution status:", err);
+        }
+    }
+
+    return { user, couple, dissolutionStatus };
 }
 
 // =============================================================

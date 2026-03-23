@@ -2,11 +2,17 @@
 //  dashboard.js — Relationship Dashboard
 //  MoodSync · Data loading, card rendering, realtime updates
 //
-//  Dependencies: supabaseClient.js, auth.js, mood.js, algorithm.js
+//  Dependencies: supabaseClient.js, auth.js, mood.js, algorithm.js, data.js
+//
+//  PHASE 1 STABILIZATION:
+//  - No localStorage (all data from Supabase)
+//  - Uses centralized getPartnerData() from data.js
+//  - Proper realtime subscription cleanup
+//  - Consistent error handling
 //
 //  Flow:
 //    1. requireCouple() guard
-//    2. Fetch both partners' mood histories
+//    2. Fetch both partners' mood histories from Supabase
 //    3. Run calculateHealthScore()
 //    4. Render all dashboard cards
 //    5. Subscribe to realtime mood updates → auto-refresh
@@ -22,6 +28,9 @@ const TREND_META = {
     insufficient: { icon: "⏳", label: "Not enough data", color: "var(--clr-text-secondary)", desc: "Log at least 3 days to unlock trend analysis." },
 };
 
+// Module-level context for realtime updates
+let _dashboardCtx = null;
+
 // =============================================================
 //  Boot
 // =============================================================
@@ -33,49 +42,42 @@ document.addEventListener("DOMContentLoaded", async () => {
     const ctx = await requireCouple();
     if (!ctx) return;
 
+    _dashboardCtx = ctx;
+
     await loadDashboard(ctx.user, ctx.couple);
 
-    // Realtime: refresh when either partner logs a new mood
-    subscribeToMoodUpdates(async (payload) => {
-        const partnerId = getPartnerId(ctx.couple, ctx.user.id);
-        if (payload.new.user_id === partnerId || payload.new.user_id === ctx.user.id) {
-            await loadDashboard(ctx.user, ctx.couple);
-        }
-    });
+    // Check and show dissolution banner if pending
+    if (typeof checkAndShowDissolutionBanner === "function") {
+        await checkAndShowDissolutionBanner();
+    }
 
-    // Logout
+    // Realtime: refresh when either partner logs a new mood
+    // Uses subscribeWithCleanup from data.js for proper cleanup
+    const partnerId = getPartnerId(ctx.couple, ctx.user.id);
+    subscribeWithCleanup(
+        "dashboard-mood-updates",
+        { event: "INSERT", schema: "public", table: "mood_logs" },
+        async (payload) => {
+            if (payload.new.user_id === partnerId || payload.new.user_id === ctx.user.id) {
+                await loadDashboard(ctx.user, ctx.couple);
+            }
+        }
+    );
+
+    // Logout - cleanup subscriptions before signing out
     const logoutBtn = document.getElementById("logoutBtn");
-    if (logoutBtn) logoutBtn.addEventListener("click", (e) => { e.preventDefault(); signOut(); });
+    if (logoutBtn) {
+        logoutBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            unsubscribeAll();
+            signOut();
+        });
+    }
 });
 
 // =============================================================
-//  Data Helpers
+//  Render Functions
 // =============================================================
-
-/**
- * Fetch the last `days` days of mood logs for both partners in a
- * single Supabase query and return them as a flat array.
- */
-async function fetchCoupleLogsDirectly(couple, days = 14) {
-    const cutoff = new Date();
-    cutoff.setDate(cutoff.getDate() - (days - 1));
-    cutoff.setHours(0, 0, 0, 0);
-
-    const { data, error } = await supabaseClient
-        .from("mood_logs")
-        .select("id, user_id, score, note, logged_at")
-        .or(`user_id.eq.${couple.user1_id},user_id.eq.${couple.user2_id}`)
-        .gte("logged_at", cutoff.toISOString())
-        .order("logged_at", { ascending: true });
-
-    if (error) throw new Error("Failed to fetch couple logs: " + error.message);
-    return (data || []).map(row => ({
-        date:   row.logged_at.slice(0, 10),
-        userId: row.user_id,
-        score:  row.score,
-        note:   row.note,
-    }));
-}
 
 // =============================================================
 //  Main Loader
@@ -90,15 +92,14 @@ async function loadDashboard(user, couple) {
     try {
         const partnerId = getPartnerId(couple, user.id);
 
-        // Parallel fetch: 14-day couple logs (for health score + recent cards)
-        //                 + all-time per-user (for trend / confidence / averages)
-        //                 + both profiles
-        const [coupleLogs14, uLogsAll, pLogsAll, uProfile, pProfile] = await Promise.all([
-            fetchCoupleLogsDirectly(couple, 14),
-            getMoodHistory(user.id),
-            getMoodHistory(partnerId),
+        // Use centralized getPartnerData() - NO localStorage
+        // Parallel fetch: 14-day couple logs + profiles via data.js
+        const [coupleLogs14, uLogsAll, pLogsAll, uProfile, partnerData] = await Promise.all([
+            getCoupleMoodLogs(couple, 14),
+            getMoodLogs(user.id),
+            getMoodLogs(partnerId),
             getProfile(user.id),
-            getProfile(partnerId),
+            getPartnerData(),
         ]);
 
         // Split 14-day fetch by user
@@ -112,25 +113,9 @@ async function loadDashboard(user, couple) {
         const uLogs7   = uLogs14.filter(l => l.date >= cut7str);
         const pLogs7   = pLogs14.filter(l => l.date >= cut7str);
 
-        // Resolve display names with multi-layer fallback:
-        //   1. profiles table   2. auth metadata   3. pairing_requests join   4. localStorage cache   5. literal fallback
-        const cacheKey  = `ms_partner_${couple.id}`;
-        const myName    = uProfile?.name || user.user_metadata?.name || "You";
-        let partnerName = pProfile?.name;
-
-        // pProfile can be null when the profiles SELECT policy only permits
-        // reading own row. In that case try the accepted pairing_requests join —
-        // same approach that already works on pair.html.
-        if (!partnerName) {
-            partnerName = await _fetchPartnerNameViaRequest(user.id, partnerId);
-        }
-
-        if (partnerName) {
-            try { localStorage.setItem(cacheKey, partnerName); } catch (_) {}
-        } else {
-            try { partnerName = localStorage.getItem(cacheKey); } catch (_) {}
-        }
-        partnerName = partnerName || "Partner";
+        // Resolve display names from Supabase only (no localStorage)
+        const myName      = uProfile?.name || user.user_metadata?.name || "You";
+        const partnerName = partnerData?.partnerName || "Partner";
 
         // Header
         _renderHeader(myName, partnerName);
@@ -380,7 +365,52 @@ function _moodCardClass(score) {
     return "log-card--very-sad";
 }
 
-// ---- Mood Trend Graph (14-day, Chart.js) ----
+// ---- Mood Trend Graph (14-day, Timeline-Driven, PREMIUM) ----
+
+/** Custom plugin for vertical hover line */
+const verticalHoverLine = {
+    id: "verticalHoverLine",
+    afterDraw(chart, args, options) {
+        if (chart.tooltip?._active?.length) {
+            const ctx = chart.ctx;
+            const activePoint = chart.tooltip._active[0];
+            const x = activePoint.element.x;
+            const topY = chart.scales.y.top;
+            const bottomY = chart.scales.y.bottom;
+
+            ctx.save();
+
+            // Gradient vertical line
+            const gradient = ctx.createLinearGradient(0, topY, 0, bottomY);
+            gradient.addColorStop(0, "rgba(255, 255, 255, 0)");
+            gradient.addColorStop(0.2, "rgba(255, 255, 255, 0.15)");
+            gradient.addColorStop(0.8, "rgba(255, 255, 255, 0.15)");
+            gradient.addColorStop(1, "rgba(255, 255, 255, 0)");
+
+            ctx.beginPath();
+            ctx.moveTo(x, topY);
+            ctx.lineTo(x, bottomY);
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = gradient;
+            ctx.stroke();
+
+            ctx.restore();
+        }
+    }
+};
+
+/** Debounce utility for hover performance */
+let _hoverDebounceTimer = null;
+function _debounceHover(fn, delay = 16) {
+    return function(...args) {
+        if (_hoverDebounceTimer) return;
+        _hoverDebounceTimer = setTimeout(() => {
+            _hoverDebounceTimer = null;
+        }, delay);
+        return fn.apply(this, args);
+    };
+}
+
 function _renderMoodGraph(coupleLogs14, userId, partnerId, myName, partnerName) {
     const canvas = document.getElementById("moodTrendChart");
     if (!canvas || typeof Chart === "undefined") return;
@@ -391,42 +421,60 @@ function _renderMoodGraph(coupleLogs14, userId, partnerId, myName, partnerName) 
     if (legendMyEl) legendMyEl.textContent = myName;
     if (legendPtEl) legendPtEl.textContent = partnerName;
 
-    // Build 14-day date labels (ISO keys + short display labels)
-    const today     = new Date();
-    const isoKeys   = [];
-    const dispLabels = [];
-    for (let i = 13; i >= 0; i--) {
-        const d = new Date(today);
-        d.setDate(today.getDate() - i);
-        isoKeys.push(d.toISOString().slice(0, 10));
-        dispLabels.push(d.toLocaleDateString("en-US", { month: "short", day: "numeric" }));
-    }
-
-    // For each user build a score array — one value per day (latest log wins; logs sorted asc)
-    function scoresByDate(uid) {
-        const map = {};
-        coupleLogs14
-            .filter(l => l.userId === uid)
-            .forEach(l => { map[l.date] = l.score; });
-        return isoKeys.map(d => (map[d] !== undefined ? map[d] : null));
-    }
-
-    const myScores      = scoresByDate(userId);
-    const partnerScores = scoresByDate(partnerId);
-
-    // Gradient fills — use a fixed height since canvas may not be painted yet
+    // Get canvas context for gradients
     const ctx = canvas.getContext("2d");
     const fillH = 260;
+
+    // Create premium gradients with richer colors
     const gradMe = ctx.createLinearGradient(0, 0, 0, fillH);
-    gradMe.addColorStop(0, "rgba(201, 140, 245, 0.32)");
+    gradMe.addColorStop(0, "rgba(201, 140, 245, 0.30)");
+    gradMe.addColorStop(0.5, "rgba(201, 140, 245, 0.10)");
     gradMe.addColorStop(1, "rgba(201, 140, 245, 0.00)");
+
     const gradPartner = ctx.createLinearGradient(0, 0, 0, fillH);
-    gradPartner.addColorStop(0, "rgba(247, 160, 190, 0.32)");
+    gradPartner.addColorStop(0, "rgba(247, 160, 190, 0.30)");
+    gradPartner.addColorStop(0.5, "rgba(247, 160, 190, 0.10)");
     gradPartner.addColorStop(1, "rgba(247, 160, 190, 0.00)");
 
-    // Destroy previous chart instance before redraw (dashboard auto-refreshes on new logs)
+    // Destroy previous chart instance
     if (window._moodTrendChart instanceof Chart) {
         window._moodTrendChart.destroy();
+    }
+
+    // Use new timeline-driven graph system
+    let graphData;
+    if (typeof prepareTimelineGraph === "function") {
+        graphData = prepareTimelineGraph(
+            coupleLogs14,
+            userId,
+            partnerId,
+            myName,
+            partnerName,
+            { myGradient: gradMe, partnerGradient: gradPartner }
+        );
+    } else {
+        // Fallback to simple rendering
+        const labels = [];
+        const today = new Date();
+        for (let i = 13; i >= 0; i--) {
+            const d = new Date(today);
+            d.setDate(d.getDate() - i);
+            labels.push(d.toLocaleDateString("en-US", { month: "short", day: "numeric" }));
+        }
+        graphData = {
+            labels,
+            datasets: [{
+                label: myName,
+                data: new Array(14).fill(null),
+                borderColor: "#c98cf5",
+                backgroundColor: gradMe,
+                tension: 0.4,
+                pointRadius: 5,
+                borderWidth: 2.5,
+                spanGaps: false,
+                fill: true,
+            }]
+        };
     }
 
     const MOOD_TOOLTIP = {
@@ -437,90 +485,125 @@ function _renderMoodGraph(coupleLogs14, userId, partnerId, myName, partnerName) 
         8: "🥰 Great",    9: "🥰 Great",
     };
 
+    // Register the custom plugin if not already
+    if (!Chart.registry.plugins.get("verticalHoverLine")) {
+        Chart.register(verticalHoverLine);
+    }
+
     window._moodTrendChart = new Chart(ctx, {
         type: "line",
         data: {
-            labels: dispLabels,
-            datasets: [
-                {
-                    label: myName,
-                    data: myScores,
-                    borderColor: "#c98cf5",
-                    backgroundColor: gradMe,
-                    tension: 0.45,
-                    pointRadius: 4,
-                    pointHoverRadius: 7,
-                    pointBackgroundColor: "#c98cf5",
-                    pointBorderColor: "rgba(255,255,255,0.55)",
-                    pointBorderWidth: 2,
-                    borderWidth: 2.5,
-                    spanGaps: false,
-                    fill: true,
-                },
-                {
-                    label: partnerName,
-                    data: partnerScores,
-                    borderColor: "#f7a0be",
-                    backgroundColor: gradPartner,
-                    tension: 0.45,
-                    pointRadius: 4,
-                    pointHoverRadius: 7,
-                    pointBackgroundColor: "#f7a0be",
-                    pointBorderColor: "rgba(255,255,255,0.55)",
-                    pointBorderWidth: 2,
-                    borderWidth: 2.5,
-                    spanGaps: false,
-                    fill: true,
-                },
-            ],
+            labels: graphData.labels,
+            datasets: graphData.datasets,
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            interaction: { mode: "index", intersect: false },
-            animation: { duration: 900, easing: "easeInOutQuart" },
-            layout: { padding: { top: 8, bottom: 4 } },
+            interaction: {
+                mode: "index",
+                intersect: false,
+                axis: "x"
+            },
+            // Premium animation configuration
+            animation: {
+                duration: 1200,
+                easing: "easeOutQuart"
+            },
+            layout: { padding: { top: 12, bottom: 8, left: 4, right: 4 } },
             plugins: {
                 legend: { display: false },
+                verticalHoverLine: { enabled: true },
                 tooltip: {
-                    backgroundColor: "rgba(14, 6, 28, 0.92)",
-                    borderColor: "rgba(255,255,255,0.14)",
+                    enabled: true,
+                    // Glassmorphism tooltip styling
+                    backgroundColor: "rgba(20, 10, 35, 0.85)",
+                    borderColor: "rgba(255, 255, 255, 0.18)",
                     borderWidth: 1,
-                    titleColor: "rgba(255,255,255,0.88)",
-                    bodyColor: "rgba(255,255,255,0.65)",
-                    padding: { x: 14, y: 10 },
+                    titleColor: "rgba(255, 255, 255, 0.95)",
+                    titleFont: { size: 13, weight: "600", family: "Inter, -apple-system, sans-serif" },
+                    bodyColor: "rgba(255, 255, 255, 0.75)",
+                    bodyFont: { size: 12, family: "Inter, -apple-system, sans-serif" },
+                    padding: { x: 16, y: 12 },
                     cornerRadius: 14,
-                    caretSize: 6,
+                    caretSize: 0,  // No caret for cleaner look
+                    displayColors: true,
+                    boxWidth: 8,
+                    boxHeight: 8,
+                    boxPadding: 6,
+                    usePointStyle: true,
+                    // Animation
+                    animation: {
+                        duration: 150,
+                        easing: "easeOutQuart"
+                    },
+                    filter: function(tooltipItem) {
+                        // Hide internal datasets (starting with _)
+                        return !tooltipItem.dataset.label?.startsWith("_");
+                    },
                     callbacks: {
-                        label(item) {
-                            const v = item.raw;
-                            if (v === null || v === undefined) return null;
-                            return `  ${item.dataset.label}: ${MOOD_TOOLTIP[v] || v}`;
+                        title(items) {
+                            // Show date in a friendly format
+                            if (items.length > 0) {
+                                return items[0].label;
+                            }
+                            return "";
                         },
+                        label(item) {
+                            const label = item.dataset.label;
+                            // Skip internal datasets
+                            if (label?.startsWith("_")) return null;
+
+                            const v = item.raw;
+
+                            // Handle missing data points
+                            if (v === null || v === undefined) {
+                                return null;  // Don't show anything for missing
+                            }
+
+                            // Show mood for real data
+                            const moodText = MOOD_TOOLTIP[Math.round(v)] || `${v}/9`;
+                            return `${label}: ${moodText}`;
+                        },
+                        labelColor(item) {
+                            return {
+                                borderColor: item.dataset.borderColor,
+                                backgroundColor: item.dataset.borderColor,
+                                borderWidth: 0,
+                                borderRadius: 4,
+                            };
+                        }
                     },
                 },
             },
             scales: {
                 x: {
                     border: { display: false },
-                    grid: { color: "rgba(255,255,255,0.06)" },
+                    grid: {
+                        color: "rgba(255, 255, 255, 0.04)",
+                        drawTicks: false
+                    },
                     ticks: {
-                        color: "rgba(255,255,255,0.40)",
-                        font: { size: 11, family: "Inter, sans-serif" },
-                        maxRotation: 40,
+                        color: "rgba(255, 255, 255, 0.4)",
+                        font: { size: 10, family: "Inter, -apple-system, sans-serif" },
+                        maxRotation: 0,
                         autoSkip: true,
                         maxTicksLimit: 7,
+                        padding: 8
                     },
                 },
                 y: {
                     min: 0.5,
                     max: 9.5,
                     border: { display: false },
-                    grid: { color: "rgba(255,255,255,0.06)" },
+                    grid: {
+                        color: "rgba(255, 255, 255, 0.04)",
+                        drawTicks: false
+                    },
                     ticks: {
-                        color: "rgba(255,255,255,0.40)",
+                        color: "rgba(255, 255, 255, 0.4)",
                         font: { size: 13 },
                         stepSize: 2,
+                        padding: 8,
                         callback(value) {
                             const map = { 1: "😫", 3: "😔", 5: "😐", 7: "😄", 9: "🥰" };
                             return map[value] || "";
@@ -528,37 +611,12 @@ function _renderMoodGraph(coupleLogs14, userId, partnerId, myName, partnerName) 
                     },
                 },
             },
+            // Debounced hover for performance
+            onHover: _debounceHover((event, elements, chart) => {
+                chart.canvas.style.cursor = elements.length > 0 ? "pointer" : "default";
+            }, 16),
         },
     });
-}
-
-// =============================================================
-//  Partner-name resolution helper
-// =============================================================
-
-/**
- * Try to resolve the partner's display name via the accepted
- * pairing_requests row (both sender and receiver have RLS access to it).
- * Returns null if not found or the profile embed is blocked.
- */
-async function _fetchPartnerNameViaRequest(userId, partnerId) {
-    const { data } = await supabaseClient
-        .from("pairing_requests")
-        .select(
-            "sender_id,receiver_id," +
-            "sp:profiles!pairing_requests_sender_id_fkey(name)," +
-            "rp:profiles!pairing_requests_receiver_id_fkey(name)"
-        )
-        .eq("status", "accepted")
-        .or(
-            `and(sender_id.eq.${userId},receiver_id.eq.${partnerId}),` +
-            `and(sender_id.eq.${partnerId},receiver_id.eq.${userId})`
-        )
-        .limit(1)
-        .maybeSingle();
-
-    if (!data) return null;
-    return (data.sender_id === partnerId ? data.sp?.name : data.rp?.name) || null;
 }
 
 // =============================================================
@@ -568,7 +626,7 @@ async function _fetchPartnerNameViaRequest(userId, partnerId) {
 function _checkTodayLogged(userId, logs14) {
     const ctaEl = document.getElementById("logMoodCta");
     if (!ctaEl) return;
-    // UTC date comparison — consistent with how fetchCoupleLogsDirectly stores dates
+    // UTC date comparison — consistent with how getCoupleMoodLogs stores dates
     const todayStr    = new Date().toISOString().slice(0, 10);
     const loggedToday = logs14.some(l => l.userId === userId && l.date === todayStr);
 

@@ -2,11 +2,16 @@
 //  mood-history.js — Full Mood History Page
 //  MoodSync · Paginated log for both partners (all time)
 //
-//  Dependencies: supabaseClient.js, auth.js, mood.js
+//  Dependencies: supabaseClient.js, auth.js, mood.js, data.js
+//
+//  PHASE 1 STABILIZATION:
+//  - No localStorage (all data from Supabase)
+//  - Uses centralized getPartnerData() from data.js
+//  - Consistent error handling
 //
 //  Flow:
 //    1. requireCouple() guard
-//    2. Resolve display names (same chain as dashboard)
+//    2. Resolve display names via getPartnerData() (no localStorage)
 //    3. Fetch mood_logs for both partners with pagination
 //    4. Render entries — newest first
 //    5. Pagination controls (50 logs per page)
@@ -35,29 +40,14 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const partnerId = getPartnerId(authCtx.couple, authCtx.user.id);
 
-    // Resolve names — same multi-layer chain used in dashboard.js
-    const [uProfile, pProfile] = await Promise.all([
+    // Resolve names via getPartnerData() — NO localStorage
+    const [uProfile, partnerData] = await Promise.all([
         getProfile(authCtx.user.id),
-        getProfile(partnerId),
+        getPartnerData(),
     ]);
 
-    const cacheKey    = `ms_partner_${authCtx.couple.id}`;
     const myName      = uProfile?.name || authCtx.user.user_metadata?.name || "You";
-    let   partnerName = pProfile?.name;
-
-    if (!partnerName) {
-        try { partnerName = localStorage.getItem(cacheKey); } catch (_) {}
-    } else {
-        try { localStorage.setItem(cacheKey, partnerName); } catch (_) {}
-    }
-    // Layer 3: pairing_requests table fallback
-    if (!partnerName) {
-        partnerName = await _fetchPartnerNameViaRequest(authCtx.user.id, partnerId);
-        if (partnerName) {
-            try { localStorage.setItem(cacheKey, partnerName); } catch (_) {}
-        }
-    }
-    partnerName = partnerName || "Partner";
+    const partnerName = partnerData?.partnerName || "Partner";
 
     _ctx = { user: authCtx.user, couple: authCtx.couple, partnerId, myName, partnerName };
 
@@ -302,7 +292,11 @@ async function _confirmDelete() {
 
         if (error) {
             console.error("[mood-history] Delete failed:", error.message);
-            alert("Could not delete the entry. Please try again.");
+            if (typeof showToast === "function") {
+                showToast("Could not delete the entry. Please try again.", "error");
+            } else {
+                alert("Could not delete the entry. Please try again.");
+            }
             return;
         }
 
@@ -314,30 +308,10 @@ async function _confirmDelete() {
         await _loadPage();
     } catch (err) {
         console.error("[mood-history] Delete exception:", err.message);
-        alert("An unexpected error occurred. Please try again.");
+        if (typeof showToast === "function") {
+            showToast("An unexpected error occurred. Please try again.", "error");
+        } else {
+            alert("An unexpected error occurred. Please try again.");
+        }
     }
-}
-
-// =============================================================
-//  Partner name fallback — pairing_requests table
-// =============================================================
-
-async function _fetchPartnerNameViaRequest(userId, partnerId) {
-    const { data } = await supabaseClient
-        .from("pairing_requests")
-        .select(
-            "sender_id,receiver_id," +
-            "sp:profiles!pairing_requests_sender_id_fkey(name)," +
-            "rp:profiles!pairing_requests_receiver_id_fkey(name)"
-        )
-        .eq("status", "accepted")
-        .or(
-            `and(sender_id.eq.${userId},receiver_id.eq.${partnerId}),` +
-            `and(sender_id.eq.${partnerId},receiver_id.eq.${userId})`
-        )
-        .limit(1)
-        .maybeSingle();
-
-    if (!data) return null;
-    return (data.sender_id === partnerId ? data.sp?.name : data.rp?.name) || null;
 }
