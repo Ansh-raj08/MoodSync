@@ -9,6 +9,189 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Voice Call Styles -->
+    <style>
+    /* Voice Call Integration Styles for Chat */
+    .chat-voice-controls {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-left: auto;
+        margin-right: 1rem;
+    }
+
+    .voice-btn {
+        width: 40px;
+        height: 40px;
+        border: none;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        backdrop-filter: blur(10px);
+        position: relative;
+    }
+
+    .voice-btn__icon {
+        width: 20px;
+        height: 20px;
+    }
+
+    .voice-btn--call {
+        background: rgba(102, 126, 234, 0.8);
+        color: white;
+        border: 1px solid rgba(102, 126, 234, 0.4);
+    }
+
+    .voice-btn--call:hover {
+        background: rgba(102, 126, 234, 1);
+        transform: scale(1.05);
+    }
+
+    .voice-btn--accept {
+        background: rgba(76, 175, 80, 0.8);
+        color: white;
+        border: 1px solid rgba(76, 175, 80, 0.4);
+    }
+
+    .voice-btn--accept:hover {
+        background: rgba(76, 175, 80, 1);
+        transform: scale(1.05);
+    }
+
+    .voice-btn--reject,
+    .voice-btn--end {
+        background: rgba(244, 67, 54, 0.8);
+        color: white;
+        border: 1px solid rgba(244, 67, 54, 0.4);
+    }
+
+    .voice-btn--reject:hover,
+    .voice-btn--end:hover {
+        background: rgba(244, 67, 54, 1);
+        transform: scale(1.05);
+    }
+
+    .voice-btn--mute {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .voice-btn--mute:hover {
+        background: rgba(255, 255, 255, 0.2);
+    }
+
+    .voice-btn--mute.muted {
+        background: rgba(255, 152, 0, 0.8);
+        border-color: rgba(255, 152, 0, 0.4);
+    }
+
+    .voice-controls-group {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .call-duration {
+        font-family: 'JetBrains Mono', 'Courier New', monospace;
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.7);
+        background: rgba(0, 0, 0, 0.2);
+        padding: 0.25rem 0.5rem;
+        border-radius: 12px;
+        min-width: 40px;
+        text-align: center;
+    }
+
+    .calling-indicator {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .pulse-ring {
+        width: 20px;
+        height: 20px;
+        border: 2px solid rgba(102, 126, 234, 0.4);
+        border-radius: 50%;
+        position: relative;
+        animation: pulse 1.5s infinite;
+    }
+
+    .pulse-ring::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 8px;
+        height: 8px;
+        background: #667eea;
+        border-radius: 50%;
+    }
+
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+            opacity: 1;
+        }
+        50% {
+            transform: scale(1.3);
+            opacity: 0.7;
+        }
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+    .calling-text {
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.8);
+        white-space: nowrap;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .chat-voice-controls {
+            gap: 0.25rem;
+        }
+
+        .voice-btn {
+            width: 36px;
+            height: 36px;
+        }
+
+        .voice-btn__icon {
+            width: 18px;
+            height: 18px;
+        }
+
+        .call-duration {
+            font-size: 0.7rem;
+            padding: 0.2rem 0.4rem;
+        }
+
+        .calling-text {
+            display: none; /* Hide text on small screens */
+        }
+    }
+
+    /* Integration with existing chat topbar */
+    .chat-topbar {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .chat-topbar__info {
+        flex: 1;
+    }
+    </style>
 </head>
 <body class="chat-body">
 
@@ -54,6 +237,68 @@
                     <span class="chat-topbar__name" id="partnerName">Partner</span>
                     <span class="chat-topbar__status" id="chatStatus">Loading…</span>
                 </div>
+
+                <!-- Voice Call Controls -->
+                <div class="chat-voice-controls" id="chatVoiceControls">
+                    <!-- Hidden audio element for remote stream -->
+                    <audio id="remoteAudio" autoplay style="display: none;"></audio>
+
+                    <!-- Idle state: Call button -->
+                    <button id="callBtn" class="voice-btn voice-btn--call" title="Call your partner">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="voice-btn__icon">
+                            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                        </svg>
+                    </button>
+
+                    <!-- Incoming call controls -->
+                    <div id="incomingCallControls" class="voice-controls-group" style="display: none;">
+                        <button id="acceptCallBtn" class="voice-btn voice-btn--accept" title="Accept call">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="voice-btn__icon">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                        </button>
+                        <button id="rejectCallBtn" class="voice-btn voice-btn--reject" title="Decline call">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="voice-btn__icon">
+                                <line x1="18" y1="6" x2="6" y2="18"/>
+                                <line x1="6" y1="6" x2="18" y2="18"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Active call controls -->
+                    <div id="activeCallControls" class="voice-controls-group" style="display: none;">
+                        <button id="muteBtn" class="voice-btn voice-btn--mute" title="Mute/Unmute">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="voice-btn__icon">
+                                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                                <line x1="12" y1="19" x2="12" y2="23"/>
+                                <line x1="8" y1="23" x2="16" y2="23"/>
+                            </svg>
+                        </button>
+                        <span id="callDuration" class="call-duration">00:00</span>
+                        <button id="endCallBtn" class="voice-btn voice-btn--end" title="End call">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="voice-btn__icon">
+                                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                                <line x1="18" y1="6" x2="6" y2="18"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Calling state -->
+                    <div id="callingState" class="voice-controls-group" style="display: none;">
+                        <div class="calling-indicator">
+                            <div class="pulse-ring"></div>
+                            <span class="calling-text">Calling...</span>
+                        </div>
+                        <button id="cancelCallBtn" class="voice-btn voice-btn--reject" title="Cancel call">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="voice-btn__icon">
+                                <line x1="18" y1="6" x2="6" y2="18"/>
+                                <line x1="6" y1="6" x2="18" y2="18"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
                 <a href="dashboard.html" class="chat-topbar__back" title="Back to Dashboard">←</a>
             </header>
 
@@ -119,11 +364,14 @@
     <script src="js/data.js"></script>
     <script src="js/ui.js"></script>
     <script src="js/main.js"></script>
+    <script src="js/voice-call.js"></script>
+    <script src="js/voice-call-ui.js"></script>
     <script src="js/chat.js"></script>
+    <script src="js/voice-call-test.js"></script>
 
     <!-- Prototype label -->
     <div style="position:fixed;bottom:12px;right:16px;font-size:11px;font-family:'Inter',sans-serif;color:rgba(255,255,255,0.35);letter-spacing:0.04em;pointer-events:none;z-index:9999;">
-        Prototype V-1.0.0
+        1.2.2
     </div>
 </body>
 </html>

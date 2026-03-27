@@ -111,6 +111,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Load history FIRST, then subscribe so realtime doesn't double-render history
     await _loadRecentMessages();
     _subscribeRealtime();
+
+    // Initialize voice calling
+    await _initVoiceCalling();
 });
 
 // =============================================================
@@ -147,6 +150,43 @@ async function _fetchMessages({ before = null } = {}) {
  * Insert a new message row. Returns the confirmed row from DB.
  */
 async function _insertMessage(text) {
+    // Pre-flight validation: ensure we have valid context
+    if (!_user?.id) {
+        throw new Error("User not authenticated");
+    }
+
+    if (!_partnerId) {
+        throw new Error("No partner found - cannot send message");
+    }
+
+    if (!_couple?.id) {
+        throw new Error("No couple relationship found - cannot send message");
+    }
+
+    // Validate that the couple relationship is still active
+    try {
+        const { data: coupleCheck, error: coupleError } = await supabaseClient
+            .from("couples")
+            .select("id, dissolution_scheduled_for, dissolution_cancelled_at")
+            .eq("id", _couple.id)
+            .single();
+
+        if (coupleError) {
+            console.error("[chat] Couple validation failed:", coupleError);
+            throw new Error("Relationship verification failed");
+        }
+
+        if (coupleCheck.dissolution_scheduled_for && !coupleCheck.dissolution_cancelled_at) {
+            throw new Error("Cannot send messages - relationship is ending");
+        }
+    } catch (error) {
+        if (error.message.includes("relationship")) {
+            throw error; // Re-throw relationship errors as-is
+        }
+        console.warn("[chat] Couple validation error:", error.message);
+        // Continue with message send - might be a temporary network issue
+    }
+
     const payload = {
         sender_id:    _user.id,
         receiver_id:  _partnerId,
@@ -155,6 +195,13 @@ async function _insertMessage(text) {
         delivered_at: new Date().toISOString(),
     };
 
+    console.log("[chat] Attempting message insert:", {
+        sender: _user.id.slice(0, 8) + "...",
+        receiver: _partnerId.slice(0, 8) + "...",
+        couple: _couple.id.slice(0, 8) + "...",
+        messageLength: text.length
+    });
+
     const { data, error } = await supabaseClient
         .from("messages")
         .insert(payload)
@@ -162,10 +209,30 @@ async function _insertMessage(text) {
         .single();
 
     if (error) {
-        console.error("[chat] INSERT failed:", error.code, error.message);
-        throw new Error(`[${error.code}] ${error.message}`);
+        console.error("[chat] INSERT failed:", {
+            code: error.code,
+            message: error.message,
+            details: error.details,
+            hint: error.hint
+        });
+
+        // Provide user-friendly error messages
+        let userMessage = "Failed to send message";
+
+        if (error.code === "42501") {
+            userMessage = "Permission denied - check if you're still paired with your partner";
+        } else if (error.code === "23505") {
+            userMessage = "Duplicate message detected - please try again";
+        } else if (error.message.includes("couple_id")) {
+            userMessage = "Relationship validation failed - please refresh and try again";
+        } else if (error.message.includes("receiver_id")) {
+            userMessage = "Invalid recipient - please check your pairing status";
+        }
+
+        throw new Error(userMessage);
     }
 
+    console.log("[chat] Message inserted successfully:", data.id);
     return data;
 }
 
@@ -600,6 +667,185 @@ function _subscribeRealtime() {
 }
 
 // =============================================================
+//  Voice Calling Integration
+// =============================================================
+
+/**
+ * Initialize voice calling for the chat interface
+ */
+async function _initVoiceCalling() {
+    try {
+        // Initialize voice calling system
+        const voiceEnabled = await VoiceCall.init();
+
+        if (voiceEnabled) {
+            // Initialize enhanced UI
+            VoiceCallUI.init();
+
+            // Set up event listeners for voice controls
+            _setupVoiceCallListeners();
+
+            // Override the basic UI update function with chat-specific one
+            VoiceCall._updateCallUI = _updateVoiceCallUI;
+
+            console.log("[chat] Voice calling enabled");
+
+            // Show subtle notification that voice calling is ready
+            _setStatus("Voice calling ready", 2000);
+
+        } else {
+            console.warn("[chat] Voice calling disabled");
+
+            // Hide voice controls if not available
+            const voiceControls = document.getElementById('chatVoiceControls');
+            if (voiceControls) voiceControls.style.display = 'none';
+        }
+
+    } catch (error) {
+        console.error("[chat] Voice calling initialization failed:", error.message);
+
+        // Hide voice controls on error
+        const voiceControls = document.getElementById('chatVoiceControls');
+        if (voiceControls) voiceControls.style.display = 'none';
+    }
+}
+
+/**
+ * Set up event listeners for voice call controls
+ */
+function _setupVoiceCallListeners() {
+    const callBtn = document.getElementById('callBtn');
+    const acceptBtn = document.getElementById('acceptCallBtn');
+    const rejectBtn = document.getElementById('rejectCallBtn');
+    const endBtn = document.getElementById('endCallBtn');
+    const muteBtn = document.getElementById('muteBtn');
+    const cancelBtn = document.getElementById('cancelCallBtn');
+
+    if (callBtn) {
+        callBtn.addEventListener('click', async () => {
+            try {
+                await VoiceCall.start();
+            } catch (error) {
+                console.error("[chat] Failed to start call:", error.message);
+                if (error.message.includes('microphone')) {
+                    _setStatus("Microphone access required for calls", 3000);
+                } else {
+                    _setStatus("Call failed - please try again", 3000);
+                }
+            }
+        });
+    }
+
+    if (acceptBtn) {
+        acceptBtn.addEventListener('click', async () => {
+            if (window._pendingCallOffer) {
+                try {
+                    await VoiceCall.accept(window._pendingCallOffer);
+                } catch (error) {
+                    console.error("[chat] Failed to accept call:", error.message);
+                    _setStatus("Failed to join call", 3000);
+                }
+            }
+        });
+    }
+
+    if (rejectBtn) {
+        rejectBtn.addEventListener('click', async () => {
+            try {
+                await VoiceCall.reject();
+            } catch (error) {
+                console.error("[chat] Failed to reject call:", error.message);
+            }
+        });
+    }
+
+    if (endBtn) {
+        endBtn.addEventListener('click', async () => {
+            try {
+                await VoiceCall.end();
+            } catch (error) {
+                console.error("[chat] Failed to end call:", error.message);
+            }
+        });
+    }
+
+    if (muteBtn) {
+        muteBtn.addEventListener('click', () => {
+            try {
+                VoiceCall.toggleMute();
+            } catch (error) {
+                console.error("[chat] Failed to toggle mute:", error.message);
+            }
+        });
+    }
+
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', async () => {
+            try {
+                await VoiceCall.end();
+            } catch (error) {
+                console.error("[chat] Failed to cancel call:", error.message);
+            }
+        });
+    }
+}
+
+/**
+ * Chat-specific voice call UI update function
+ */
+function _updateVoiceCallUI() {
+    const state = VoiceCall ? VoiceCall.getState() : 'idle';
+
+    // Hide all voice control groups
+    const allGroups = ['callBtn', 'incomingCallControls', 'activeCallControls', 'callingState'];
+    allGroups.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+    });
+
+    // Show appropriate controls based on state
+    switch (state) {
+        case 'idle':
+            document.getElementById('callBtn').style.display = 'block';
+            break;
+
+        case 'calling':
+            document.getElementById('callingState').style.display = 'flex';
+            _setStatus(`Calling ${_partnerName}...`);
+            break;
+
+        case 'incoming':
+            document.getElementById('incomingCallControls').style.display = 'flex';
+            _setStatus(`Incoming call from ${_partnerName}`);
+            break;
+
+        case 'in_call':
+            document.getElementById('activeCallControls').style.display = 'flex';
+            _setStatus(`In call with ${_partnerName}`);
+            break;
+
+        default:
+            console.warn('[chat] Unknown voice call state:', state);
+            document.getElementById('callBtn').style.display = 'block';
+    }
+
+    // Update mute button state if in call
+    if (state === 'in_call') {
+        const muteBtn = document.getElementById('muteBtn');
+        if (muteBtn && VoiceCall.isMuted) {
+            const muted = VoiceCall.isMuted();
+            if (muted) {
+                muteBtn.classList.add('muted');
+                muteBtn.title = 'Unmute';
+            } else {
+                muteBtn.classList.remove('muted');
+                muteBtn.title = 'Mute';
+            }
+        }
+    }
+}
+
+// =============================================================
 //  Utilities
 // =============================================================
 
@@ -638,3 +884,131 @@ function _formatDay(date) {
     if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
     return date.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
 }
+
+// =============================================================
+//  DEBUG UTILITIES
+// =============================================================
+
+/**
+ * Debug chat functionality and diagnose message sending issues
+ */
+async function debugChat() {
+    console.log("\n=== 💬 CHAT DEBUG DIAGNOSTICS ===\n");
+
+    // 1. Check authentication
+    console.log("1️⃣ Authentication Status:");
+    console.log("- User ID:", _user?.id || "❌ Not authenticated");
+    console.log("- Partner ID:", _partnerId || "❌ Not found");
+    console.log("- Couple ID:", _couple?.id || "❌ Not found");
+
+    // 2. Check couple relationship
+    if (_couple?.id) {
+        console.log("\n2️⃣ Couple Relationship Check:");
+        try {
+            const { data: couple, error } = await supabaseClient
+                .from("couples")
+                .select("*")
+                .eq("id", _couple.id)
+                .single();
+
+            if (error) {
+                console.log("❌ Couple query failed:", error.message);
+            } else {
+                console.log("✅ Couple found:", {
+                    id: couple.id.slice(0, 8) + "...",
+                    user1: couple.user1_id.slice(0, 8) + "...",
+                    user2: couple.user2_id.slice(0, 8) + "...",
+                    dissolution_scheduled: couple.dissolution_scheduled_for || "None",
+                    dissolution_cancelled: couple.dissolution_cancelled_at || "None"
+                });
+
+                // Check if current user is in the couple
+                const userInCouple = couple.user1_id === _user.id || couple.user2_id === _user.id;
+                const partnerInCouple = couple.user1_id === _partnerId || couple.user2_id === _partnerId;
+
+                console.log("- User in couple:", userInCouple ? "✅ Yes" : "❌ No");
+                console.log("- Partner in couple:", partnerInCouple ? "✅ Yes" : "❌ No");
+            }
+        } catch (err) {
+            console.log("❌ Couple check exception:", err.message);
+        }
+    }
+
+    // 3. Test message insert policy
+    console.log("\n3️⃣ Message Insert Test:");
+    if (_user?.id && _partnerId && _couple?.id) {
+        try {
+            // Test with a minimal message
+            const testPayload = {
+                sender_id: _user.id,
+                receiver_id: _partnerId,
+                couple_id: _couple.id,
+                message: "DEBUG_TEST_MESSAGE",
+                delivered_at: new Date().toISOString()
+            };
+
+            console.log("- Test payload:", {
+                sender: testPayload.sender_id.slice(0, 8) + "...",
+                receiver: testPayload.receiver_id.slice(0, 8) + "...",
+                couple: testPayload.couple_id.slice(0, 8) + "...",
+                message: testPayload.message
+            });
+
+            const { data, error } = await supabaseClient
+                .from("messages")
+                .insert(testPayload)
+                .select("id")
+                .single();
+
+            if (error) {
+                console.log("❌ Insert test failed:", {
+                    code: error.code,
+                    message: error.message,
+                    details: error.details,
+                    hint: error.hint
+                });
+            } else {
+                console.log("✅ Insert test succeeded! Message ID:", data.id);
+
+                // Clean up test message
+                await supabaseClient
+                    .from("messages")
+                    .update({ is_deleted: true })
+                    .eq("id", data.id);
+                console.log("- Test message cleaned up");
+            }
+        } catch (err) {
+            console.log("❌ Insert test exception:", err.message);
+        }
+    } else {
+        console.log("❌ Cannot test insert - missing required data");
+    }
+
+    // 4. Check table schema
+    console.log("\n4️⃣ Schema Verification:");
+    try {
+        // Try to get a sample message to check schema
+        const { data: sample, error } = await supabaseClient
+            .from("messages")
+            .select("*")
+            .limit(1);
+
+        if (sample && sample.length > 0) {
+            const columns = Object.keys(sample[0]);
+            console.log("✅ Messages table columns:", columns);
+
+            const hasCoupleId = columns.includes('couple_id');
+            console.log("- couple_id column:", hasCoupleId ? "✅ Present" : "❌ Missing");
+        } else {
+            console.log("⚠️ No sample messages found - cannot verify schema");
+        }
+    } catch (err) {
+        console.log("❌ Schema check failed:", err.message);
+    }
+
+    console.log("\n=== 📊 DIAGNOSTIC COMPLETE ===");
+    console.log("💡 If insert fails, check Supabase RLS policies for messages table");
+}
+
+// Make debug function available globally
+window.debugChat = debugChat;

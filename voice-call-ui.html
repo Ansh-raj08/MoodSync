@@ -1,0 +1,286 @@
+<!-- =============================================================
+     Voice Call UI Component
+
+     Add this to pages that need voice calling (chat.html, dashboard.html)
+
+     Styling uses MoodSync's existing glass-morphism design
+     ============================================================= -->
+
+<!-- Voice Call Controls -->
+<div id="voiceCallSection" class="voice-call-section">
+    <!-- Hidden audio element for remote stream -->
+    <audio id="remoteAudio" autoplay style="display: none;"></audio>
+
+    <!-- Main call controls -->
+    <div class="call-controls">
+        <!-- Idle state: Call button -->
+        <button id="callBtn" class="btn btn--primary call-btn">
+            <span class="btn__icon">📞</span>
+            Call Partner
+        </button>
+
+        <!-- Incoming call state -->
+        <div id="incomingCallControls" class="incoming-call-controls" style="display: none;">
+            <div class="incoming-call-header">
+                <span class="call-icon">📞</span>
+                <span class="call-text">Incoming call from your partner...</span>
+            </div>
+            <div class="call-actions">
+                <button id="acceptCallBtn" class="btn btn--success">
+                    <span class="btn__icon">✅</span>
+                    Accept
+                </button>
+                <button id="rejectCallBtn" class="btn btn--danger">
+                    <span class="btn__icon">❌</span>
+                    Decline
+                </button>
+            </div>
+        </div>
+
+        <!-- Active call state -->
+        <div id="activeCallControls" class="active-call-controls" style="display: none;">
+            <div class="call-info">
+                <div class="call-status">
+                    <span class="status-indicator"></span>
+                    <span id="callStatus">In call</span>
+                    <span id="callDuration">00:00</span>
+                </div>
+            </div>
+            <div class="call-actions">
+                <button id="muteBtn" class="btn btn--secondary mute-btn">
+                    <span class="btn__icon">🔇</span>
+                    Mute
+                </button>
+                <button id="endCallBtn" class="btn btn--danger">
+                    <span class="btn__icon">📞</span>
+                    End Call
+                </button>
+            </div>
+        </div>
+
+        <!-- Call states feedback -->
+        <div id="callFeedback" class="call-feedback">
+            <div id="callingState" class="call-state calling-state" style="display: none;">
+                <div class="pulse-animation"></div>
+                <span>Calling your partner...</span>
+                <button id="cancelCallBtn" class="btn btn--secondary btn--small">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Voice Call Styles -->
+<style>
+.voice-call-section {
+    margin: 1rem 0;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.call-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: center;
+}
+
+.call-btn {
+    min-width: 160px;
+    font-weight: 600;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.call-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+.incoming-call-controls {
+    text-align: center;
+    animation: slideIn 0.3s ease;
+}
+
+.incoming-call-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+    color: var(--clr-mint);
+}
+
+.call-icon {
+    font-size: 1.5rem;
+    animation: ring 2s infinite;
+}
+
+@keyframes ring {
+    0%, 100% { transform: rotate(0deg); }
+    10%, 30% { transform: rotate(-15deg); }
+    20% { transform: rotate(15deg); }
+}
+
+.call-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.btn--success {
+    background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+    border: none;
+}
+
+.btn--danger {
+    background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+    border: none;
+}
+
+.btn--secondary {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.active-call-controls {
+    width: 100%;
+}
+
+.call-info {
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.call-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    color: var(--clr-mint);
+    font-weight: 500;
+}
+
+.status-indicator {
+    width: 8px;
+    height: 8px;
+    background: var(--clr-mint);
+    border-radius: 50%;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 0.5; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.2); }
+    100% { opacity: 0.5; transform: scale(1); }
+}
+
+#callDuration {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+.mute-btn.muted {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+    color: white;
+}
+
+.call-feedback {
+    width: 100%;
+}
+
+.calling-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.pulse-animation {
+    width: 60px;
+    height: 60px;
+    background: rgba(102, 126, 234, 0.3);
+    border-radius: 50%;
+    position: relative;
+    animation: callPulse 2s infinite;
+}
+
+.pulse-animation::before {
+    content: '📞';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 24px;
+}
+
+@keyframes callPulse {
+    0% { transform: scale(1); opacity: 0.8; }
+    50% { transform: scale(1.2); opacity: 0.5; }
+    100% { transform: scale(1); opacity: 0.8; }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.btn--small {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    min-width: auto;
+}
+
+/* Responsive design */
+@media (max-width: 480px) {
+    .call-actions {
+        flex-direction: column;
+    }
+
+    .call-actions button {
+        width: 100%;
+        max-width: 200px;
+    }
+
+    .voice-call-section {
+        margin: 0.5rem 0;
+        padding: 0.75rem;
+    }
+}
+
+/* Integration with existing dark theme */
+body.dark-mode .voice-call-section {
+    background: rgba(0, 0, 0, 0.2);
+    border-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Accessibility */
+.btn:focus {
+    outline: 2px solid var(--clr-mint);
+    outline-offset: 2px;
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+</style>

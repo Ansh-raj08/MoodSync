@@ -267,4 +267,3 @@ BEGIN
     RAISE NOTICE 'MoodSync RLS fixes applied successfully!';
 END $$;
 
--- supabase db dump --db-url "postgresql://postgres:[ProjectMoodSync]@db.bisvezgkbdyhfzotzyoj.supabase.co:5432/postgres" > schema.sql
