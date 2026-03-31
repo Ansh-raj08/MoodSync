@@ -65,12 +65,49 @@
 
             <!-- Page header -->
             <header class="settings-header">
-                <h1 class="settings-header__title">Relationship Settings</h1>
-                <p class="settings-header__sub">Manage your MoodSync partnership</p>
+                <h1 class="settings-header__title">Settings</h1>
+                <p class="settings-header__sub">Manage your MoodSync account</p>
             </header>
 
-            <!-- Relationship Info Card -->
+            <!-- App Info Card -->
+            <section class="settings-card settings-card--app-info glass-card">
+                <div class="settings-card__header">
+                    <span class="settings-card__icon">💜</span>
+                    <h2 class="settings-card__title">MoodSync</h2>
+                </div>
+                <div class="settings-card__body">
+                    <div class="app-info">
+                        <div class="app-info__row">
+                            <span class="app-info__label">Version</span>
+                            <span class="app-info__value">v1.2.2</span>
+                        </div>
+                        <div class="app-info__row">
+                            <span class="app-info__label">Created by</span>
+                            <span class="app-info__value app-info__value--creator">Ansh</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Account Actions Card -->
             <section class="settings-card glass-card">
+                <div class="settings-card__header">
+                    <span class="settings-card__icon">👤</span>
+                    <h2 class="settings-card__title">Account</h2>
+                </div>
+                <div class="settings-card__body">
+                    <div class="account-actions">
+                        <p class="account-actions__text">Sign out of your MoodSync account on this device.</p>
+                        <button class="btn btn--glass" id="logoutBtnMain">
+                            <span class="btn__icon">🚪</span>
+                            Log Out
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Relationship Info Card -->
+            <section class="settings-card glass-card" id="relationshipCard">
                 <div class="settings-card__header">
                     <span class="settings-card__icon">💑</span>
                     <h2 class="settings-card__title">Your Relationship</h2>
@@ -90,7 +127,7 @@
             </section>
 
             <!-- Privacy & Location Settings Card -->
-            <section class="settings-card glass-card">
+            <section class="settings-card glass-card" id="locationCard">
                 <div class="settings-card__header">
                     <span class="settings-card__icon">📍</span>
                     <h2 class="settings-card__title">Location Sharing</h2>
@@ -132,7 +169,7 @@
                         Dissolving your relationship will permanently delete all shared data
                         (mood logs and messages) after a 15-day grace period.
                     </p>
-                    <button class="btn btn--danger" id="dissolveBtn">
+                    <button class="btn btn--danger" id="dissolveBtn" type="button">
                         Dissolve Relationship
                     </button>
                 </div>
@@ -147,7 +184,7 @@
         <div class="modal__card glass-card">
             <div class="modal__header">
                 <h2 class="modal__title">⚠️ Confirm Dissolution</h2>
-                <button class="modal__close" id="modalCloseBtn" aria-label="Close">&times;</button>
+                <button class="modal__close" id="modalCloseBtn" type="button" aria-label="Close">&times;</button>
             </div>
             <div class="modal__body">
                 <p class="modal__warning">
@@ -185,8 +222,8 @@
                 </div>
             </div>
             <div class="modal__footer">
-                <button class="btn btn--ghost" id="modalCancelBtn">Cancel</button>
-                <button class="btn btn--danger" id="modalConfirmBtn" disabled>
+                <button class="btn btn--ghost" id="modalCancelBtn" type="button">Cancel</button>
+                <button class="btn btn--danger" id="modalConfirmBtn" type="button" disabled>
                     Initiate Dissolution
                 </button>
             </div>
@@ -221,7 +258,7 @@
 
     <!-- Prototype label -->
     <div style="position:fixed;bottom:12px;right:16px;font-size:11px;font-family:'Inter',sans-serif;color:rgba(255,255,255,0.35);letter-spacing:0.04em;pointer-events:none;z-index:9999;">
-        Prototype V-1.0.1
+        MoodSync v1.2.2
     </div>
 </body>
 </html>

@@ -13,6 +13,9 @@
 
 "use strict";
 
+// Track if modal listeners are already attached (prevent duplicates)
+let modalListenersAttached = false;
+
 document.addEventListener("DOMContentLoaded", async () => {
     const page = window.location.pathname.split("/").pop();
     if (page !== "settings.html") return;
@@ -22,15 +25,19 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     await initSettingsPage(ctx);
 
-    // Logout - cleanup subscriptions before signing out
+    // Logout buttons - cleanup subscriptions before signing out
     const logoutBtn = document.getElementById("logoutBtn");
-    if (logoutBtn) {
-        logoutBtn.addEventListener("click", (e) => {
-            e.preventDefault();
-            unsubscribeAll();
-            signOut();
-        });
-    }
+    const logoutBtnMain = document.getElementById("logoutBtnMain");
+    
+    const handleLogout = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        unsubscribeAll();
+        signOut();
+    };
+    
+    if (logoutBtn) logoutBtn.addEventListener("click", handleLogout);
+    if (logoutBtnMain) logoutBtnMain.addEventListener("click", handleLogout);
 });
 
 async function initSettingsPage(ctx) {
@@ -133,6 +140,9 @@ async function initLocationSharingToggle() {
 }
 
 function wireupDissolveModal() {
+    // Prevent duplicate listeners
+    if (modalListenersAttached) return;
+    
     const dissolveBtn = document.getElementById("dissolveBtn");
     const modal = document.getElementById("dissolveModal");
     const modalOverlay = document.getElementById("modalOverlay");
@@ -143,64 +153,107 @@ function wireupDissolveModal() {
 
     if (!dissolveBtn || !modal) return;
 
-    // Open modal
-    dissolveBtn.addEventListener("click", () => {
-        modal.hidden = false;
-        confirmInput.value = "";
-        modalConfirmBtn.disabled = true;
-        setTimeout(() => confirmInput.focus(), 100);
-    });
-
-    // Close modal function
-    const closeModal = () => {
+    // Close modal function - NO navigation, only hide modal
+    const closeModal = (e) => {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
         modal.hidden = true;
-        confirmInput.value = "";
-        modalConfirmBtn.disabled = true;
+        if (confirmInput) {
+            confirmInput.value = "";
+        }
+        if (modalConfirmBtn) {
+            modalConfirmBtn.disabled = true;
+        }
     };
 
-    // Close modal handlers
-    if (modalCancelBtn) modalCancelBtn.addEventListener("click", closeModal);
-    if (modalCloseBtn) modalCloseBtn.addEventListener("click", closeModal);
-    if (modalOverlay) modalOverlay.addEventListener("click", closeModal);
+    // Open modal
+    dissolveBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        modal.hidden = false;
+        if (confirmInput) {
+            confirmInput.value = "";
+        }
+        if (modalConfirmBtn) {
+            modalConfirmBtn.disabled = true;
+        }
+        setTimeout(() => confirmInput?.focus(), 100);
+    });
+
+    // Close modal handlers - ONLY close modal, NO navigation
+    if (modalCancelBtn) {
+        modalCancelBtn.addEventListener("click", closeModal);
+    }
+    
+    if (modalCloseBtn) {
+        modalCloseBtn.addEventListener("click", closeModal);
+    }
+    
+    if (modalOverlay) {
+        modalOverlay.addEventListener("click", closeModal);
+    }
+
+    // Prevent clicks inside modal card from closing
+    const modalCard = modal.querySelector(".modal__card");
+    if (modalCard) {
+        modalCard.addEventListener("click", (e) => {
+            e.stopPropagation();
+        });
+    }
 
     // Escape key closes modal
     document.addEventListener("keydown", (e) => {
-        if (e.key === "Escape" && !modal.hidden) closeModal();
+        if (e.key === "Escape" && !modal.hidden) {
+            closeModal(e);
+        }
     });
 
     // Enable confirm button only when typed correctly
-    confirmInput.addEventListener("input", () => {
-        const typed = confirmInput.value.trim().toLowerCase();
-        modalConfirmBtn.disabled = typed !== "dissolve relationship";
-    });
+    if (confirmInput) {
+        confirmInput.addEventListener("input", () => {
+            const typed = confirmInput.value.trim().toLowerCase();
+            if (modalConfirmBtn) {
+                modalConfirmBtn.disabled = typed !== "dissolve relationship";
+            }
+        });
+    }
 
     // Confirm dissolution
-    modalConfirmBtn.addEventListener("click", async () => {
-        modalConfirmBtn.disabled = true;
-        modalConfirmBtn.textContent = "Processing...";
+    if (modalConfirmBtn) {
+        modalConfirmBtn.addEventListener("click", async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            modalConfirmBtn.disabled = true;
+            modalConfirmBtn.textContent = "Processing...";
 
-        try {
-            const result = await initiateDissolve();
+            try {
+                const result = await initiateDissolve();
 
-            // Show success message
-            const scheduledDate = new Date(result.scheduledFor);
-            const formattedDate = scheduledDate.toLocaleDateString("en-US", {
-                year: "numeric",
-                month: "long",
-                day: "numeric"
-            });
+                // Show success message
+                const scheduledDate = new Date(result.scheduledFor);
+                const formattedDate = scheduledDate.toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric"
+                });
 
-            alert(`Dissolution initiated.\n\nGrace period ends on ${formattedDate}.\n\nEither partner can cancel during this time.`);
+                alert(`Dissolution initiated.\n\nGrace period ends on ${formattedDate}.\n\nEither partner can cancel during this time.`);
 
-            // Reload to show pending state
-            window.location.reload();
-        } catch (err) {
-            console.error("[settings] Dissolution failed:", err);
-            alert("Failed to initiate dissolution:\n" + err.message);
-            modalConfirmBtn.disabled = false;
-            modalConfirmBtn.textContent = "Initiate Dissolution";
-        }
-    });
+                // Reload to show pending state
+                window.location.reload();
+            } catch (err) {
+                console.error("[settings] Dissolution failed:", err);
+                alert("Failed to initiate dissolution:\n" + err.message);
+                modalConfirmBtn.disabled = false;
+                modalConfirmBtn.textContent = "Initiate Dissolution";
+            }
+        });
+    }
+
+    modalListenersAttached = true;
 }
 
 function showDissolutionPending(status) {

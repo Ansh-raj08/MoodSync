@@ -118,12 +118,12 @@
    - animation-fill-mode: both keeps the first frame visible instantly.  */
 input:focus,
 textarea:focus {
-    animation:
-        caretColorCycle 5s linear infinite,
-        caretGlow       5s linear infinite;
+    animation: caretColorCycle 5s linear infinite;
     animation-fill-mode: both;
     /* Suppress the native blink so our animation fully controls it */
     caret-color: auto;
+    /* Static glow replaces animated caretGlow — much lighter on GPU */
+    box-shadow: 0 2px 6px rgba(0,0,0,.05), 0 0 0 3px rgba(201, 140, 245, .18), 0 0 12px rgba(201, 140, 245, .12), inset 0 1px 0 rgba(255,255,255,.08);
 }
 
 /* Group error class (can animate label, etc.) */
@@ -294,12 +294,13 @@ ul  { list-style: none; }
     z-index: -1;
     overflow: hidden;
     pointer-events: none;
+    contain: strict;
 }
 
 .orb {
     position: absolute;
     border-radius: 50%;
-    filter: blur(140px);
+    filter: blur(80px);
     opacity: 0.28;
     animation: orbDrift 20s ease-in-out infinite alternate;
     will-change: transform;
@@ -360,6 +361,7 @@ ul  { list-style: none; }
     box-shadow: var(--shadow-glass),
                 inset 0 1px 0 var(--glass-inner-shadow);
     overflow: hidden;
+    contain: content;
     transition: transform var(--duration) var(--ease-smooth),
                 border-color var(--duration) var(--ease-smooth),
                 box-shadow var(--duration) var(--ease-smooth),
@@ -1627,4 +1629,48 @@ ul  { list-style: none; }
     .pair-request__actions .btn {
         flex: 1;
     }
+}
+
+/* ============================================================
+   SAFARI PERFORMANCE OVERRIDES
+   Reduce backdrop-filter on non-essential decorative elements.
+   Safari WebKit composites each blur layer individually — fewer
+   layers = dramatically fewer GPU passes.
+   ============================================================ */
+
+/* Decorative elements: reduce blur to near-invisible levels */
+.section__label,
+.feature-card__tag,
+.step-card__icon,
+.feature-card__icon-wrap,
+.privacy__list li,
+.hero__badge {
+    -webkit-backdrop-filter: blur(6px) saturate(120%);
+    backdrop-filter: blur(6px) saturate(120%);
+}
+
+/* Ghost buttons only blur on hover — skip entirely when not hovered */
+.btn--ghost {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+}
+.btn--ghost:hover {
+    -webkit-backdrop-filter: blur(8px) saturate(130%);
+    backdrop-filter: blur(8px) saturate(130%);
+}
+
+/* Reduce footer blur */
+.footer {
+    -webkit-backdrop-filter: blur(12px) saturate(140%);
+    backdrop-filter: blur(12px) saturate(140%);
+}
+
+/* Prefer reduced motion: kill orb + glow animations entirely */
+@media (prefers-reduced-motion: reduce) {
+    .orb { animation: none !important; }
+    .floating-emoji { animation: none !important; }
+    .graph-legend__dot--me,
+    .graph-legend__dot--partner { animation: none !important; }
+    input:focus,
+    textarea:focus { animation: none !important; }
 }

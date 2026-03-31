@@ -195,12 +195,7 @@ async function _insertMessage(text) {
         delivered_at: new Date().toISOString(),
     };
 
-    console.log("[chat] Attempting message insert:", {
-        sender: _user.id.slice(0, 8) + "...",
-        receiver: _partnerId.slice(0, 8) + "...",
-        couple: _couple.id.slice(0, 8) + "...",
-        messageLength: text.length
-    });
+    // Debug logging removed for performance — use debugChat() for diagnostics
 
     const { data, error } = await supabaseClient
         .from("messages")
@@ -232,7 +227,6 @@ async function _insertMessage(text) {
         throw new Error(userMessage);
     }
 
-    console.log("[chat] Message inserted successfully:", data.id);
     return data;
 }
 
@@ -359,10 +353,11 @@ function _appendMessage(row, pos = "bottom", skipScroll = false, msgStatus = nul
     if (retryText)               rowEl.dataset.retryText = retryText;
 
     // Compact: consecutive messages from same sender on same day
-    const prev = containerEl.querySelectorAll(
-        `.chat-message-row--${isMe ? "me" : "partner"}[data-day="${dayKey}"]`
-    );
-    if (prev.length > 0) rowEl.classList.add("chat-message-row--compact");
+    // O(1) check using the last element instead of querySelectorAll
+    const lastRow = containerEl.lastElementChild;
+    if (lastRow && lastRow.classList?.contains(`chat-message-row--${isMe ? "me" : "partner"}`) && lastRow.dataset?.day === dayKey) {
+        rowEl.classList.add("chat-message-row--compact");
+    }
 
     // ---- Bubble ----
     const bubble = document.createElement("div");

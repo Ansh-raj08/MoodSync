@@ -150,6 +150,82 @@
     font-weight: 600;
 }
 
+/* ---- App Info card ---- */
+
+.settings-card--app-info {
+    background: linear-gradient(
+        145deg,
+        rgba(201, 140, 245, 0.08) 0%,
+        rgba(201, 140, 245, 0.03) 50%,
+        rgba(147, 112, 219, 0.06) 100%
+    );
+    border: 1px solid rgba(201, 140, 245, 0.15);
+}
+
+.settings-card--app-info .settings-card__title {
+    background: linear-gradient(135deg,
+        var(--clr-lavender) 0%,
+        var(--clr-pink) 50%,
+        var(--clr-purple) 100%);
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: gradientFlow 6s ease infinite;
+}
+
+.app-info {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.app-info__row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.app-info__row:last-child {
+    border-bottom: none;
+}
+
+.app-info__label {
+    font-size: 0.9rem;
+    color: var(--clr-text-secondary);
+    font-weight: 500;
+}
+
+.app-info__value {
+    font-size: 0.95rem;
+    color: var(--clr-text-primary);
+    font-weight: 600;
+}
+
+.app-info__value--creator {
+    background: linear-gradient(135deg, var(--clr-pink), var(--clr-lavender));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* ---- Account Actions ---- */
+
+.account-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.account-actions__text {
+    font-size: 0.9rem;
+    color: var(--clr-text-secondary);
+    line-height: 1.5;
+    margin: 0;
+}
+
 /* ---- Settings toggle (location sharing, etc.) ---- */
 
 .settings-toggle {

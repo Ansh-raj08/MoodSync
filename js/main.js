@@ -36,16 +36,21 @@ if (hamburger && navLinks) {
 const navbar = document.querySelector(".navbar");
 
 if (navbar) {
+    let _scrollTicking = false;
 
     window.addEventListener("scroll", () => {
+        if (_scrollTicking) return;
+        _scrollTicking = true;
 
-        if (window.scrollY > 40) {
-            navbar.classList.add("navbar--scrolled");
-        } else {
-            navbar.classList.remove("navbar--scrolled");
-        }
-
-    });
+        requestAnimationFrame(() => {
+            if (window.scrollY > 40) {
+                navbar.classList.add("navbar--scrolled");
+            } else {
+                navbar.classList.remove("navbar--scrolled");
+            }
+            _scrollTicking = false;
+        });
+    }, { passive: true });
 
 }
 

@@ -97,6 +97,7 @@
     min-height: 240px;
     position: relative;
     overflow: hidden;
+    contain: content;
 }
 
 .dash-card__badge {
@@ -110,8 +111,6 @@
     background: rgba(255, 255, 255, 0.12);
     border: 1px solid rgba(255, 255, 255, 0.18);
     color: var(--clr-text-secondary);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
     width: fit-content;
     margin-bottom: 4px;
 }
@@ -529,8 +528,8 @@
     border-radius: 20px;
     background: rgba(255, 255, 255, 0.06);
     border: 1px solid rgba(255, 255, 255, 0.10);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
     box-shadow: 0 0 18px var(--card-glow);
     transition: transform 0.22s ease, box-shadow 0.22s ease;
     animation: logCardIn 0.38s ease both;

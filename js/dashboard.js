@@ -53,13 +53,16 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // Realtime: refresh when either partner logs a new mood
     // Uses subscribeWithCleanup from data.js for proper cleanup
+    // Debounced to prevent cascading re-renders from rapid-fire events
     const partnerId = getPartnerId(ctx.couple, ctx.user.id);
+    let _dashReloadTimer = null;
     subscribeWithCleanup(
         "dashboard-mood-updates",
         { event: "INSERT", schema: "public", table: "mood_logs" },
-        async (payload) => {
+        (payload) => {
             if (payload.new.user_id === partnerId || payload.new.user_id === ctx.user.id) {
-                await loadDashboard(ctx.user, ctx.couple);
+                clearTimeout(_dashReloadTimer);
+                _dashReloadTimer = setTimeout(() => loadDashboard(ctx.user, ctx.couple), 1500);
             }
         }
     );
